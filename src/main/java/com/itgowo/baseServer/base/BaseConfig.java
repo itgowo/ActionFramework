@@ -6,9 +6,13 @@ import java.io.FileOutputStream;
 import java.nio.charset.Charset;
 import java.util.Properties;
 
+/**
+ * 基础配置管理类，项目可以继承此类添加配置
+ */
 public class BaseConfig {
     private static Properties configProperties;
     public static final String CONFIG_SERVER_PORT = "ServerPort";
+    public static final String CONFIG_SERVER_IS_VALID_SIGN = "ServerIsValidSign";
     public static final String CONFIG_SERVER_REDIS_URL = "ServerRedisUrl";
     public static final String CONFIG_SERVER_REDIS_AUTH = "ServerRedisAuth";
     public static final String CONFIG_SERVER_MYSQL_URL = "ServerMySQLUrl";
@@ -19,14 +23,15 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_THREAD_CACHE_TIME = "ServerThreadCacheTime";
     public static final String CONFIG_SERVER_NETTY_BOSSGROUP_THREAD_NUM = "ServerNettyBossGroupThreadNum";
     public static final String CONFIG_SERVER_NETTY_WORKER_THREAD_NUM = "ServerNettyWorkerThreadNum";
-    private static Integer serverPort = null;
-    private static Integer threadCoreNum = null;
-    private static Integer threadMaxNum = null;
-    private static Integer threadCacheTime = null;
-    private static Integer nettyBossGroupThreadNum = null;
-    private static Integer nettyWorkerGroupThreadNum = null;
-    private static String serverMySQLUrl = null;
-    private static String serverRedisUrl = null;
+    public static Integer serverPort = null;
+    public static Integer threadCoreNum = null;
+    public static Integer threadMaxNum = null;
+    public static Integer threadCacheTime = null;
+    public static Integer nettyBossGroupThreadNum = null;
+    public static Integer nettyWorkerGroupThreadNum = null;
+    public static String serverMySQLUrl = null;
+    public static String serverRedisUrl = null;
+    public static Boolean ServerIsValidSign = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
@@ -62,6 +67,16 @@ public class BaseConfig {
         try {
             String result = getProperty(propertyName, String.valueOf(defaultValue));
             return Integer.valueOf(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return defaultValue;
+        }
+    }
+
+    public static boolean getProperty(String propertyName, boolean defaultValue) {
+        try {
+            String result = getProperty(propertyName, String.valueOf(defaultValue));
+            return Boolean.valueOf(result);
         } catch (Exception e) {
             e.printStackTrace();
             return defaultValue;
@@ -134,5 +149,12 @@ public class BaseConfig {
             nettyWorkerGroupThreadNum = getProperty(CONFIG_SERVER_NETTY_WORKER_THREAD_NUM, 6);
         }
         return nettyWorkerGroupThreadNum;
+    }
+
+    public static boolean getServerIsValidSign() {
+        if (ServerIsValidSign == null) {
+            ServerIsValidSign = getProperty(CONFIG_SERVER_IS_VALID_SIGN, true);
+        }
+        return ServerIsValidSign;
     }
 }

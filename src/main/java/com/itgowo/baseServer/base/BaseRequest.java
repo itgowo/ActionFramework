@@ -13,8 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+/**
+ * 客户端请求Json基类，实现了校验方法
+ */
 public class BaseRequest {
-
     private String flag;
     private String action;
     private String token;
@@ -36,7 +38,7 @@ public class BaseRequest {
         return request;
     }
 
-    public boolean isValid(boolean isValidSign) {
+    public boolean isValid(boolean isValidSign, boolean isValidTimeLimit, long timeLimit) {
         if (action == null || action.trim().length() < 1) {
             return false;
         }
@@ -46,7 +48,13 @@ public class BaseRequest {
         if (flag == null || flag.trim().length() < 1) {
             return false;
         }
-        if (isValidSign && sign == null || sign.trim().length() < 32) {
+        if (isValidSign && (sign == null || sign.trim().length() < 32)) {
+            return false;
+        }
+        if (isValidSign && !checkSign()) {
+            return false;
+        }
+        if (isValidTimeLimit && isTimeOut(timeLimit)) {
             return false;
         }
         return true;
@@ -63,8 +71,8 @@ public class BaseRequest {
         return sign.equals(fixSign());
     }
 
-    public boolean checkTimeOut() {
-        return System.currentTimeMillis() - timeStamp > 1000 * 60;
+    public boolean isTimeOut(long timeLimit) {
+        return System.currentTimeMillis() - timeStamp > timeLimit;
     }
 
     private String fixSign() {

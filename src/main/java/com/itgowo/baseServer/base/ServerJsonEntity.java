@@ -5,7 +5,8 @@ import com.alibaba.fastjson.JSON;
 import java.io.UnsupportedEncodingException;
 
 /**
- * Created by hnvfh on 2017/4/5.
+ * Created by lujianchao on 2017/4/5.
+ * 服务返回Json的基层结构
  */
 public class ServerJsonEntity {
     public static final int Success = 1;
@@ -16,7 +17,7 @@ public class ServerJsonEntity {
     public static final String Code_Fail = "fail";
     private int code = 1;
     private String msg = Code_Success;
-    private String error =null;
+    private String error = null;
     private Object data = null;
 
 
