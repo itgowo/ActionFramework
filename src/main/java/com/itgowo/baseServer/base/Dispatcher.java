@@ -1,10 +1,14 @@
 package com.itgowo.baseServer.base;
 
 import com.itgowo.SimpleServerCore.Http.HttpServerHandler;
+import com.itgowo.baseServer.utils.Utils;
 import io.netty.handler.codec.http.HttpMethod;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.List;
+
 /**
  * @author lujianchao
  * 请求事件处理类
@@ -31,6 +35,38 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
     public Dispatcher setValidSign(boolean validSign) {
         isValidSign = validSign;
         return this;
+    }
+
+    /**
+     * 手动调用扫描功能，自动检查指定包路径并添加到dispatch中
+     *
+     * @param packagePath
+     */
+    public void actionScanner(File file, String packagePath) {
+        packagePath = packagePath.replace(".", "/");
+        List<Class> classes = null;
+        if (file.isFile()) {
+            classes = Utils.getClasssFromJarFile(file.getAbsolutePath(), packagePath);
+        } else {
+            classes = Utils.getClassNameByFile(file.getAbsolutePath(), true, file.getAbsolutePath(), packagePath);
+        }
+        System.out.println("找到如下Action处理器：\r\n");
+        for (int i = 0; i < classes.size(); i++) {
+            Class c = classes.get(i);
+            System.out.println(c.getName());
+            try {
+                Object o = c.newInstance();
+                if (o instanceof ActionRequest) {
+                    Object f = Utils.getFinalFieldValueByName("ACTION", c);
+                    if (f != null && f instanceof String) {
+                        registerAction((String) f, (ActionRequest) o);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("-----------------\r\n");
     }
 
     /**
