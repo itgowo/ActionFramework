@@ -153,6 +153,14 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
 
     public void onDispatch(HttpServerHandler handler) {
         if (handler.getHttpRequest() != null && handler.getHttpRequest().method() != null) {
+            if (serverListener != null && serverListener.interrupt(handler)) {
+                try {
+                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求被拦截"), true);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
             if (handler.getHttpRequest().method() != HttpMethod.POST) {
                 if (serverListener != null) {
                     serverListener.doRequestOtherMethod(handler, actionTasks.get(handler.getHttpRequest().method().name()));
@@ -214,5 +222,13 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
          * @throws Exception
          */
         public void doRequestOtherMethod(HttpServerHandler handler, ActionRequest actionRequest);
+
+        /**
+         * 请求中断拦截，true则拦截不再传递下去
+         *
+         * @param handler
+         * @return
+         */
+        public boolean interrupt(HttpServerHandler handler);
     }
 }
