@@ -13,6 +13,8 @@ public class BaseConfig {
     private static Properties configProperties;
     public static final String CONFIG_SERVER_PORT = "ServerPort";
     public static final String CONFIG_SERVER_IS_VALID_SIGN = "ServerIsValidSign";
+    public static final String CONFIG_SERVER_IS_VALID_TIME_DIFFERENCE = "ServerIsValidTimeDifference";
+    public static final String CONFIG_SERVER_IS_VALID_PARAMETER = "ServerIsValidParameter";
     public static final String CONFIG_SERVER_REDIS_URL = "ServerRedisUrl";
     public static final String CONFIG_SERVER_REDIS_AUTH = "ServerRedisAuth";
     public static final String CONFIG_SERVER_MYSQL_URL = "ServerMySQLUrl";
@@ -32,6 +34,8 @@ public class BaseConfig {
     public static String serverMySQLUrl = null;
     public static String serverRedisUrl = null;
     public static Boolean ServerIsValidSign = null;
+    public static Boolean ServerIsValidTimeDifference = null;
+    public static Boolean ServerIsValidParameter = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
@@ -156,5 +160,19 @@ public class BaseConfig {
             ServerIsValidSign = getProperty(CONFIG_SERVER_IS_VALID_SIGN, true);
         }
         return ServerIsValidSign;
+    }
+
+    public static boolean getServerIsValidTimeDifference() {
+        if (ServerIsValidTimeDifference == null) {
+            ServerIsValidTimeDifference = getProperty(CONFIG_SERVER_IS_VALID_TIME_DIFFERENCE, true);
+        }
+        return ServerIsValidTimeDifference;
+    }
+
+    public static boolean getServerIsValidParameter() {
+        if (ServerIsValidParameter == null) {
+            ServerIsValidParameter = getProperty(CONFIG_SERVER_IS_VALID_PARAMETER, true);
+        }
+        return ServerIsValidParameter;
     }
 }

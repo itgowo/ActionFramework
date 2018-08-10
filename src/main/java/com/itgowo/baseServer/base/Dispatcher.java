@@ -6,6 +6,7 @@ import io.netty.handler.codec.http.HttpMethod;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,14 +16,18 @@ import java.util.List;
  */
 public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
     private HashMap<String, ActionRequest> actionTasks = new HashMap<>();
-    private onServerListener serverListener;
+    private onDispatcherListener dispatcherListener;
     private boolean isValidSign = true;
     /**
-     * 是否校验时差
+     * 是否校验时差,BaseRequest中复写对应实现方法
      */
     private boolean isValidTimeDifference = true;
     /**
-     * 服务端与客户端时间差
+     * 是否触发参数校验方法，BaseRequest中复写对应实现方法
+     */
+    private boolean isValidParameter = true;
+    /**
+     * 服务端与客户端时间差，BaseRequest中复写对应实现方法
      */
     private long serverClientTimeDifference = 60000;
 
@@ -34,6 +39,11 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
      */
     public Dispatcher setValidSign(boolean validSign) {
         isValidSign = validSign;
+        return this;
+    }
+
+    public Dispatcher setValidParameter(boolean validParameter) {
+        isValidParameter = validParameter;
         return this;
     }
 
@@ -143,17 +153,23 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
 
     @Override
     public void onError(Throwable throwable) {
-        if (serverListener != null) serverListener.onError(throwable);
+        if (dispatcherListener != null) dispatcherListener.onError(throwable);
     }
 
-    public Dispatcher setServerListener(Dispatcher.onServerListener serverListener) {
-        this.serverListener = serverListener;
+    /**
+     * 设置处理函数，部分处理需要单独处理或者第三方处理
+     *
+     * @param dispatcherListener
+     * @return
+     */
+    public Dispatcher setDispatcherListener(Dispatcher.onDispatcherListener dispatcherListener) {
+        this.dispatcherListener = dispatcherListener;
         return this;
     }
 
     public void onDispatch(HttpServerHandler handler) {
         if (handler.getHttpRequest() != null && handler.getHttpRequest().method() != null) {
-            if (serverListener != null && serverListener.interrupt(handler)) {
+            if (dispatcherListener != null && dispatcherListener.interrupt(handler)) {
                 try {
                     handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求被拦截"), true);
                 } catch (UnsupportedEncodingException e) {
@@ -162,8 +178,8 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
                 return;
             }
             if (handler.getHttpRequest().method() != HttpMethod.POST) {
-                if (serverListener != null) {
-                    serverListener.doRequestOtherMethod(handler, actionTasks.get(handler.getHttpRequest().method().name()));
+                if (dispatcherListener != null) {
+                    dispatcherListener.doRequestOtherMethod(handler, actionTasks.get(handler.getHttpRequest().method().name()));
                 }
                 return;
             }
@@ -175,7 +191,14 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
             }
             return;
         }
-        BaseRequest baseRequest = BaseRequest.parse(handler);
+        BaseRequest baseRequest = null;
+        if (dispatcherListener != null) {
+            try {
+                baseRequest = dispatcherListener.parseJson(handler.getBody(Charset.forName("utf-8")));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         if (baseRequest == null) {
             try {
                 handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求解析失败"), true);
@@ -184,7 +207,15 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
             }
             return;
         }
-        if (!baseRequest.isValid(isValidSign, isValidTimeDifference, serverClientTimeDifference)) {
+        if (isValidTimeDifference && !baseRequest.validTimeDifference(serverClientTimeDifference)) {
+            try {
+                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("时间校验失败"), true);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+        if (isValidParameter && !baseRequest.validParameter()) {
             try {
                 handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("参数校验失败"), true);
             } catch (UnsupportedEncodingException e) {
@@ -192,7 +223,14 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
             }
             return;
         }
-
+        if (isValidSign && !baseRequest.validSign()) {
+            try {
+                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("签名校验失败"), true);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
         ActionRequest actionRequest = actionTasks.get(baseRequest.getAction());
         try {
             if (actionRequest == null) {
@@ -210,7 +248,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
         }
     }
 
-    public interface onServerListener {
+    public interface onDispatcherListener<Request extends BaseRequest> {
         void onError(Throwable throwable);
 
         /**
@@ -230,5 +268,22 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
          * @return
          */
         public boolean interrupt(HttpServerHandler handler);
+
+        /**
+         * 定义Json解析器
+         *
+         * @param string
+         * @return 返回指定对象
+         * @throws Exception
+         */
+        public Request parseJson(String string) throws Exception;
+
+        /**
+         * 生成json序列化文本
+         * @param o
+         * @return
+         * @throws Exception
+         */
+        public String toJson(Object o) throws Exception;
     }
 }
