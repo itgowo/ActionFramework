@@ -1,5 +1,5 @@
 group 'com.itgowo'
-version '1.0'
+version '0.0.1'
 
 apply plugin: 'java'
 apply plugin: 'com.novoda.bintray-release'//添加
@@ -30,8 +30,8 @@ tasks.withType(Javadoc) {
 publish {
     userOrg = 'itgowo'
     groupId = 'com.itgowo'
-    artifactId = 'baseServer'
+    artifactId = 'BaseServer'
     publishVersion = '0.0.1'
     desc = 'A service framework for Java language'
-    website = 'https://github.com/itgowo'
+    website = 'https://github.com/itgowo/BaseServer'
 }
