@@ -2,16 +2,36 @@ group 'com.itgowo'
 version '1.0'
 
 apply plugin: 'java'
+apply plugin: 'com.novoda.bintray-release'//添加
 
 sourceCompatibility = 1.8
-
-repositories {
-    jcenter()
-    mavenCentral()
-    google()
+buildscript {
+    repositories {
+        mavenCentral()
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.8.1'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
 }
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.itgowo:SimpleServer:0.26'
+//    implementation 'com.itgowo:SimpleServer:0.26'
+}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
+}
+publish {
+    userOrg = 'itgowo'
+    groupId = 'com.itgowo'
+    artifactId = 'baseServer'
+    publishVersion = '0.0.1'
+    desc = 'A service framework for Java language'
+    website = 'https://github.com/itgowo'
 }

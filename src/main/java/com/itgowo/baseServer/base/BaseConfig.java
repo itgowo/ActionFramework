@@ -14,6 +14,7 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_PORT = "ServerPort";
     public static final String CONFIG_SERVER_IS_VALID_SIGN = "ServerIsValidSign";
     public static final String CONFIG_SERVER_IS_VALID_TIME_DIFFERENCE = "ServerIsValidTimeDifference";
+    public static final String CONFIG_SERVER_ACTION_TIME_DIFFERENCE = "ServerActionTimeDifference";
     public static final String CONFIG_SERVER_IS_VALID_PARAMETER = "ServerIsValidParameter";
     public static final String CONFIG_SERVER_REDIS_URL = "ServerRedisUrl";
     public static final String CONFIG_SERVER_REDIS_AUTH = "ServerRedisAuth";
@@ -35,6 +36,7 @@ public class BaseConfig {
     public static String serverRedisUrl = null;
     public static Boolean ServerIsValidSign = null;
     public static Boolean ServerIsValidTimeDifference = null;
+    public static Long ServerActionTimeDifference = null;
     public static Boolean ServerIsValidParameter = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
@@ -71,6 +73,16 @@ public class BaseConfig {
         try {
             String result = getProperty(propertyName, String.valueOf(defaultValue));
             return Integer.valueOf(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return defaultValue;
+        }
+    }
+
+    public static long getProperty(String propertyName, long defaultValue) {
+        try {
+            String result = getProperty(propertyName, String.valueOf(defaultValue));
+            return Long.valueOf(result);
         } catch (Exception e) {
             e.printStackTrace();
             return defaultValue;
@@ -174,5 +186,12 @@ public class BaseConfig {
             ServerIsValidParameter = getProperty(CONFIG_SERVER_IS_VALID_PARAMETER, true);
         }
         return ServerIsValidParameter;
+    }
+
+    public static long getServerActionTimeDifference() {
+        if (ServerActionTimeDifference == null) {
+            ServerActionTimeDifference = getProperty(CONFIG_SERVER_ACTION_TIME_DIFFERENCE, 60000l);
+        }
+        return ServerActionTimeDifference;
     }
 }

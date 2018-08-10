@@ -2,8 +2,6 @@ package com.itgowo.baseServer.base;
 
 import com.alibaba.fastjson.JSON;
 
-import java.io.UnsupportedEncodingException;
-
 /**
  * Created by lujianchao on 2017/4/5.
  * 服务返回Json的基层结构
@@ -57,16 +55,12 @@ public class ServerJsonEntity {
         return this;
     }
 
-    public String toJson() {
-        return JSON.toJSONString(this);
-    }
-
     @Override
     public String toString() {
         return toJson();
     }
 
-    public byte[] toBytes() throws UnsupportedEncodingException {
-        return toJson().getBytes("UTF-8");
+    public String toJson() {
+        return JSON.toJSONString(this);
     }
 }
