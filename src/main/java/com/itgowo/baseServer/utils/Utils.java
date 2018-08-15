@@ -53,7 +53,7 @@ public class Utils {
     }
 
     /**
-     * 从目录内加载class文件
+     * 从IDE工作目录内加载class文件
      *
      * @param filePath
      * @param childPackage
@@ -62,6 +62,9 @@ public class Utils {
      * @return
      */
     public static List<Class> getClassNameByFile(String filePath, boolean childPackage, String oriFilePath, String packageName) {
+        if (filePath == null || filePath.trim().length() == 0) {
+            return new ArrayList();
+        }
         List<Class> myClassName = new ArrayList<>();
         File file = new File(filePath);
         File[] childFiles = file.listFiles();
@@ -91,6 +94,54 @@ public class Utils {
             }
         }
         return myClassName;
+    }
+
+    public static List<Class> getClassByDir(File rootDir, String packageName) {
+        List<Class> classes = new ArrayList<>();
+        if (rootDir == null || !rootDir.exists()) {
+            return classes;
+        }
+        List<File> files = getAllFileFromDir(rootDir, "class");
+        ServerClassLoader serverClassLoader = new ServerClassLoader(packageName);
+        for (int i = 0; i < files.size(); i++) {
+            try {
+                classes.add(serverClassLoader.loadClass(files.get(i).getAbsolutePath()));
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return classes;
+    }
+
+    /**
+     * 读取目录指定类型文件
+     *
+     * @param rootDir
+     * @param extName
+     * @return
+     */
+    public static List<File> getAllFileFromDir(File rootDir, String extName) {
+        List<File> files = new ArrayList<>();
+        if (rootDir.isFile()) {
+            if (extName != null && rootDir.getAbsolutePath().endsWith(extName)) {
+                files.add(rootDir);
+            } else if (extName == null) {
+                files.add(rootDir);
+            }
+        } else {
+            File[] fs = rootDir.listFiles();
+            for (File f : fs) {
+                if (f.isDirectory())    //若是目录，则递归打印该目录下的文件
+                    files.addAll(getAllFileFromDir(f, extName));
+                if (f.isFile())//若是文件，直接打印
+                    if (extName != null && f.getAbsolutePath().endsWith(extName)) {
+                        files.add(f);
+                    } else if (extName == null) {
+                        files.add(f);
+                    }
+            }
+        }
+        return files;
     }
 
     /**

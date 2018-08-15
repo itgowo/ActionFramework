@@ -26,6 +26,8 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_THREAD_CACHE_TIME = "ServerThreadCacheTime";
     public static final String CONFIG_SERVER_NETTY_BOSSGROUP_THREAD_NUM = "ServerNettyBossGroupThreadNum";
     public static final String CONFIG_SERVER_NETTY_WORKER_THREAD_NUM = "ServerNettyWorkerThreadNum";
+    public static final String CONFIG_SERVER_DYNAMIC_ACTION_DIR = "ServerDynamicActionDir";
+    public static final String CONFIG_SERVER_ACTION_PACKAGE = "ServerActionPackage";
     public static Integer serverPort = null;
     public static Integer threadCoreNum = null;
     public static Integer threadMaxNum = null;
@@ -38,10 +40,16 @@ public class BaseConfig {
     public static Boolean ServerIsValidTimeDifference = null;
     public static Long ServerActionTimeDifference = null;
     public static Boolean ServerIsValidParameter = null;
+    public static String ServerDynamicActionDir = null;
+    public static String ServerActionPackage = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
-            defaultValue = new String(defaultValue.getBytes(Charset.forName("utf-8")));
+            if (defaultValue != null) {
+                defaultValue = new String(defaultValue.getBytes(Charset.forName("utf-8")));
+            } else {
+                defaultValue = "";
+            }
             File file = new File(getFilePath().getParentFile(), "config.properties");
             if (!file.exists()) {
                 file.createNewFile();
@@ -193,5 +201,23 @@ public class BaseConfig {
             ServerActionTimeDifference = getProperty(CONFIG_SERVER_ACTION_TIME_DIFFERENCE, 60000l);
         }
         return ServerActionTimeDifference;
+    }
+
+    public static String getServerDynamicActionDir() {
+        if (ServerDynamicActionDir == null) {
+            ServerDynamicActionDir = getProperty(CONFIG_SERVER_DYNAMIC_ACTION_DIR, null);
+        }
+        return ServerDynamicActionDir;
+    }
+
+    /**
+     * 不设置是在所有路径查找，设置了则只在指定路径搜索
+     * @return
+     */
+    public static String getServerActionPackage() {
+        if (ServerActionPackage == null) {
+            ServerActionPackage = getProperty(CONFIG_SERVER_ACTION_PACKAGE, null);
+        }
+        return ServerActionPackage;
     }
 }

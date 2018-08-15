@@ -6,9 +6,12 @@ import io.netty.handler.codec.http.HttpMethod;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * @author lujianchao
@@ -50,9 +53,16 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
     /**
      * 手动调用扫描功能，自动检查指定包路径并添加到dispatch中
      *
-     * @param packagePath
+     * @param mainClass 主项目工程内class文件，推荐main类
      */
-    public void actionScanner(File file, String packagePath) {
+    public void actionScanner(Class mainClass) {
+        File file = Utils.getJarFile(mainClass);
+        String packagePath = BaseConfig.getServerActionPackage();
+        if (packagePath == null || packagePath.trim().length() < 1) {
+            if (dispatcherListener != null) {
+                dispatcherListener.onError(new Throwable("ServerActionPackage配置不正确，配置格式例如com.game.stzb.action或者com/game/stzb/action,允许继续运行"));
+            }
+        }
         packagePath = packagePath.replace(".", "/");
         List<Class> classes = null;
         if (file.isFile()) {
@@ -60,14 +70,34 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
         } else {
             classes = Utils.getClassNameByFile(file.getAbsolutePath(), true, file.getAbsolutePath(), packagePath);
         }
+        if (BaseConfig.getServerDynamicActionDir() != null && BaseConfig.getServerDynamicActionDir().trim().length() > 0) {
+            File dynamicDir = new File(BaseConfig.getServerDynamicActionDir());
+            List<Class> dynamicClass = Utils.getClassByDir(dynamicDir, packagePath);
+            classes.addAll(dynamicClass);
+        }
         System.out.println("找到如下Action处理器：\r\n");
         for (int i = 0; i < classes.size(); i++) {
             Class c = classes.get(i);
-            System.out.println(c.getName());
             try {
+                Constructor<?>[] constructors = c.getConstructors();
+                if (constructors.length == 0) {
+                    continue;
+                }
+                //判断是否有无参构造器
+                boolean has = false;
+                for (int i1 = 0; i1 < constructors.length; i1++) {
+                    if (constructors[i1].getParameterCount() == 0) {
+                        has = true;
+                        break;
+                    }
+                }
+                if (!has) {
+                    continue;
+                }
                 Object o = c.newInstance();
                 if (o instanceof ActionRequest) {
                     Object f = Utils.getFinalFieldValueByName("ACTION", c);
+                    System.out.println("ClassName:" + c.getName() + "   Action:" + f);
                     if (f != null && f instanceof String) {
                         registerAction((String) f, (ActionRequest) o);
                     }
@@ -280,6 +310,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
 
         /**
          * 生成json序列化文本
+         *
          * @param o
          * @return
          * @throws Exception
