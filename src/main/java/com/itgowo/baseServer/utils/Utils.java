@@ -18,8 +18,8 @@ public class Utils {
      * @param packageName 指定的文件目录
      * @return 所有的的class的对象
      */
-    public static List<Class> getClasssFromJarFile(String jarPaht, String packageName) {
-        List<Class> clazzs = new ArrayList<Class>();
+    public static List<ClassEntry> getClasssFromJarFile(String jarPaht, String packageName) {
+        List<ClassEntry> clazzs = new ArrayList<>();
 
         JarFile jarFile = null;
         try {
@@ -27,9 +27,7 @@ public class Utils {
         } catch (IOException e1) {
             e1.printStackTrace();
         }
-
         List<JarEntry> jarEntryList = new ArrayList<JarEntry>();
-
         Enumeration<JarEntry> ee = jarFile.entries();
         while (ee.hasMoreElements()) {
             JarEntry entry = (JarEntry) ee.nextElement();
@@ -41,14 +39,13 @@ public class Utils {
         for (JarEntry entry : jarEntryList) {
             String className = entry.getName().replace('/', '.');
             className = className.substring(0, className.length() - 6);
-
             try {
-                clazzs.add(Thread.currentThread().getContextClassLoader().loadClass(className));
+                Class c = Thread.currentThread().getContextClassLoader().loadClass(className);
+                clazzs.add(new ClassEntry(c, entry.getName()));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
-
         return clazzs;
     }
 
@@ -61,11 +58,11 @@ public class Utils {
      * @param packageName
      * @return
      */
-    public static List<Class> getClassNameByFile(String filePath, boolean childPackage, String oriFilePath, String packageName) {
+    public static List<ClassEntry> getClassNameByFile(String filePath, boolean childPackage, String oriFilePath, String packageName) {
         if (filePath == null || filePath.trim().length() == 0) {
             return new ArrayList();
         }
-        List<Class> myClassName = new ArrayList<>();
+        List<ClassEntry> myClassName = new ArrayList<>();
         File file = new File(filePath);
         File[] childFiles = file.listFiles();
         for (File childFile : childFiles) {
@@ -83,9 +80,9 @@ public class Utils {
                     }
                     if (childFilePath.startsWith(packageName)) {
                         childFilePath = childFilePath.replace("/", ".");
-
                         try {
-                            myClassName.add(Class.forName(childFilePath));
+                            Class c = Class.forName(childFilePath);
+                            myClassName.add(new ClassEntry(c, childFile.getAbsolutePath()));
                         } catch (ClassNotFoundException e) {
                             e.printStackTrace();
                         }
@@ -96,21 +93,36 @@ public class Utils {
         return myClassName;
     }
 
-    public static List<Class> getClassByDir(File rootDir, String packageName) {
-        List<Class> classes = new ArrayList<>();
+    public static List<ClassEntry> getClassByDir(File rootDir, String packageName) {
+        List<ClassEntry> classes = new ArrayList<>();
         if (rootDir == null || !rootDir.exists()) {
             return classes;
         }
         List<File> files = getAllFileFromDir(rootDir, "class");
         ServerClassLoader serverClassLoader = new ServerClassLoader(packageName);
-        for (int i = 0; i < files.size(); i++) {
+        for (File file : files) {
             try {
-                classes.add(serverClassLoader.loadClass(files.get(i).getAbsolutePath()));
+                Class c = serverClassLoader.loadClass(file.getAbsolutePath());
+                classes.add(new ClassEntry(c, file.getAbsolutePath()));
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
         return classes;
+    }
+
+    public static ClassEntry getClassByClassFile(File classFile, String packageName) {
+        if (!classFile.getName().toLowerCase().endsWith(".class")) {
+            return null;
+        }
+        Class classe = null;
+        ServerClassLoader serverClassLoader = new ServerClassLoader(packageName);
+        try {
+            classe = serverClassLoader.loadClass(classFile.getAbsolutePath());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return new ClassEntry(classe, classFile.getAbsolutePath());
     }
 
     /**
@@ -177,4 +189,6 @@ public class Utils {
         }
         return null;
     }
+
+
 }

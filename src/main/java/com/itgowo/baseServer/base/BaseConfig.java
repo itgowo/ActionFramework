@@ -28,6 +28,7 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_NETTY_WORKER_THREAD_NUM = "ServerNettyWorkerThreadNum";
     public static final String CONFIG_SERVER_DYNAMIC_ACTION_DIR = "ServerDynamicActionDir";
     public static final String CONFIG_SERVER_ACTION_PACKAGE = "ServerActionPackage";
+    public static final String CONFIG_SERVER_AUTO_WATCH_ACTION = "ServerAutoWatchAction";
     public static Integer serverPort = null;
     public static Integer threadCoreNum = null;
     public static Integer threadMaxNum = null;
@@ -42,6 +43,7 @@ public class BaseConfig {
     public static Boolean ServerIsValidParameter = null;
     public static String ServerDynamicActionDir = null;
     public static String ServerActionPackage = null;
+    public static Boolean ServerAutoWatchAction = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
@@ -212,6 +214,7 @@ public class BaseConfig {
 
     /**
      * 不设置是在所有路径查找，设置了则只在指定路径搜索
+     *
      * @return
      */
     public static String getServerActionPackage() {
@@ -219,5 +222,17 @@ public class BaseConfig {
             ServerActionPackage = getProperty(CONFIG_SERVER_ACTION_PACKAGE, null);
         }
         return ServerActionPackage;
+    }
+
+    /**
+     * 设置是否热更新动态接口
+     *
+     * @return
+     */
+    public static boolean getServerAutoWatchAction() {
+        if (ServerAutoWatchAction == null) {
+            ServerAutoWatchAction = getProperty(CONFIG_SERVER_AUTO_WATCH_ACTION, false);
+        }
+        return ServerAutoWatchAction;
     }
 }

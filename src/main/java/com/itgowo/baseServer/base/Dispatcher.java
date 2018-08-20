@@ -1,7 +1,9 @@
 package com.itgowo.baseServer.base;
 
 import com.itgowo.SimpleServerCore.Http.HttpServerHandler;
+import com.itgowo.baseServer.utils.ClassEntry;
 import com.itgowo.baseServer.utils.Utils;
+import com.itgowo.baseServer.utils.WatchFileService;
 import io.netty.handler.codec.http.HttpMethod;
 
 import java.io.File;
@@ -10,17 +12,20 @@ import java.lang.reflect.Constructor;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author lujianchao
  * 请求事件处理类
  */
-public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
-    private HashMap<String, ActionRequest> actionTasks = new HashMap<>();
+public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, WatchFileService.onWatchFileListener {
+    private ConcurrentHashMap<String, ActionRequest> actionTasks = new ConcurrentHashMap<>();
+    private HashMap<String, String> actionPath = new HashMap<>();
     private onDispatcherListener dispatcherListener;
+    private WatchFileService watchFileService;
     private boolean isValidSign = true;
+    private volatile boolean isHotLoading = false;
     /**
      * 是否校验时差,BaseRequest中复写对应实现方法
      */
@@ -51,6 +56,32 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
     }
 
     /**
+     * 停止外部目录变更监听，默认关闭动态更新
+     *
+     * @return
+     */
+    public Dispatcher stopWatchAction() {
+        if (watchFileService != null) {
+            watchFileService.stopWatch();
+            watchFileService = null;
+        }
+        return this;
+    }
+
+    /**
+     * 开始外部目录变更监听，默认关闭动态更新
+     *
+     * @return
+     */
+    public Dispatcher startWatchAction() {
+        if (watchFileService == null) {
+            watchFileService = new WatchFileService(BaseConfig.getServerDynamicActionDir());
+            watchFileService.startWatch(this);
+        }
+        return this;
+    }
+
+    /**
      * 手动调用扫描功能，自动检查指定包路径并添加到dispatch中
      *
      * @param mainClass 主项目工程内class文件，推荐main类
@@ -64,7 +95,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
             }
         }
         packagePath = packagePath.replace(".", "/");
-        List<Class> classes = null;
+        List<ClassEntry> classes = null;
         if (file.isFile()) {
             classes = Utils.getClasssFromJarFile(file.getAbsolutePath(), packagePath);
         } else {
@@ -72,41 +103,66 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
         }
         if (BaseConfig.getServerDynamicActionDir() != null && BaseConfig.getServerDynamicActionDir().trim().length() > 0) {
             File dynamicDir = new File(BaseConfig.getServerDynamicActionDir());
-            List<Class> dynamicClass = Utils.getClassByDir(dynamicDir, packagePath);
+            List<ClassEntry> dynamicClass = Utils.getClassByDir(dynamicDir, packagePath);
             classes.addAll(dynamicClass);
-        }
-        System.out.println("找到如下Action处理器：\r\n");
-        for (int i = 0; i < classes.size(); i++) {
-            Class c = classes.get(i);
-            try {
-                Constructor<?>[] constructors = c.getConstructors();
-                if (constructors.length == 0) {
-                    continue;
-                }
-                //判断是否有无参构造器
-                boolean has = false;
-                for (int i1 = 0; i1 < constructors.length; i1++) {
-                    if (constructors[i1].getParameterCount() == 0) {
-                        has = true;
-                        break;
-                    }
-                }
-                if (!has) {
-                    continue;
-                }
-                Object o = c.newInstance();
-                if (o instanceof ActionRequest) {
-                    Object f = Utils.getFinalFieldValueByName("ACTION", c);
-                    System.out.println("ClassName:" + c.getName() + "   Action:" + f);
-                    if (f != null && f instanceof String) {
-                        registerAction((String) f, (ActionRequest) o);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (BaseConfig.getServerAutoWatchAction()) {
+                watchFileService = new WatchFileService(dynamicDir.getAbsolutePath());
+                watchFileService.startWatch(this);
             }
         }
+        System.out.println("\r\n找到如下Action处理器：\r\n");
+        checkAndRegister(classes);
         System.out.println("-----------------\r\n");
+    }
+
+    /**
+     * 检查并加载接口
+     *
+     * @param classes
+     */
+    private void checkAndRegister(List<ClassEntry> classes) {
+        for (int i = 0; i < classes.size(); i++) {
+            checkAndRegisterAction(classes.get(i));
+        }
+    }
+
+    /**
+     * 检查并加载接口
+     *
+     * @param classEntry
+     */
+    private void checkAndRegisterAction(ClassEntry classEntry) {
+        if (classEntry == null || classEntry.getaClass() == null) {
+            return;
+        }
+        Class c = classEntry.getaClass();
+        try {
+            Constructor<?>[] constructors = c.getConstructors();
+            if (constructors.length == 0) {
+                return;
+            }
+            //判断是否有无参构造器
+            boolean has = false;
+            for (int i1 = 0; i1 < constructors.length; i1++) {
+                if (constructors[i1].getParameterCount() == 0) {
+                    has = true;
+                    break;
+                }
+            }
+            if (!has) {
+                return;
+            }
+            Object o = c.newInstance();
+            if (o instanceof ActionRequest) {
+                Object f = Utils.getFinalFieldValueByName("ACTION", c);
+                if (f != null && f instanceof String) {
+                    registerAction((String) f, (ActionRequest) o, classEntry.getFilePath());
+                    System.out.println("Action:" + f + " \tClass:" + c.getName());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -137,8 +193,9 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
      * @param actionRequest
      * @return
      */
-    public Dispatcher registerAction(String key, ActionRequest actionRequest) {
-        actionTasks.put(key, actionRequest);
+    public Dispatcher registerAction(String action, ActionRequest actionRequest, String filePath) {
+        actionTasks.put(action, actionRequest);
+        actionPath.put(filePath, action);
         return this;
     }
 
@@ -150,6 +207,9 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
      */
     public Dispatcher registerActions(HashMap<String, ActionRequest> actionTasks) {
         this.actionTasks.putAll(actionTasks);
+        for (Map.Entry<String, ActionRequest> stringActionRequestEntry : actionTasks.entrySet()) {
+            actionPath.put(stringActionRequestEntry.getKey(), stringActionRequestEntry.getValue().getClass().getName());
+        }
         return this;
     }
 
@@ -161,6 +221,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
      */
     public Dispatcher unRegisterAction(String key) {
         actionTasks.remove(key);
+        System.out.println("Dispatcher.unRegisterAction " + key);
         return this;
     }
 
@@ -179,6 +240,14 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
         if (handler != null) {
             onDispatch(handler);
         }
+    }
+
+    /**
+     * 热加载状态下所有新请求会暂停处理，已在处理中的请求不会干预，直到允许处理，默认入口预置循环
+     * @param isHotLoading
+     */
+    private void setLoadActionStatus(boolean isHotLoading) {
+        this.isHotLoading = isHotLoading;
     }
 
     @Override
@@ -261,6 +330,13 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
             }
             return;
         }
+        while (isHotLoading) {
+            try {
+                this.wait(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         ActionRequest actionRequest = actionTasks.get(baseRequest.getAction());
         try {
             if (actionRequest == null) {
@@ -275,6 +351,41 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener {
             } catch (UnsupportedEncodingException e1) {
                 e1.printStackTrace();
             }
+        }
+    }
+
+    @Override
+    public void onCreateFile(String dir, String fileName) {
+        System.out.println("HotLoad:------registerAction");
+        setLoadActionStatus(true);
+        ClassEntry c = Utils.getClassByClassFile(new File(dir + File.separator + fileName), BaseConfig.getServerActionPackage());
+        checkAndRegisterAction(c);
+        setLoadActionStatus(false);
+        System.out.println("HotLoad:------\r\n");
+    }
+
+    @Override
+    public void onModifyFile(String dir, String fileName) {
+        ClassEntry c = Utils.getClassByClassFile(new File(dir + File.separator + fileName), BaseConfig.getServerActionPackage());
+        if (c == null || c.getaClass() == null) {
+            return;
+        }
+        System.out.println("HotLoad:------registerAction");
+        setLoadActionStatus(true);
+        checkAndRegisterAction(c);
+        setLoadActionStatus(false);
+        System.out.println("HotLoad:------\r\n");
+    }
+
+    @Override
+    public void onDeleteFile(String dir, String fileName) {
+        String f = actionPath.get(dir + File.separator + fileName);
+        if (f != null) {
+            System.out.println("HotLoad:------unRegisterAction");
+            setLoadActionStatus(true);
+            unRegisterAction(f);
+            setLoadActionStatus(false);
+            System.out.println("HotLoad:------\r\n");
         }
     }
 
