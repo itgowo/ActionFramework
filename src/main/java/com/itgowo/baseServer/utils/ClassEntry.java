@@ -3,6 +3,7 @@ package com.itgowo.baseServer.utils;
 public class ClassEntry {
     private Class aClass;
     private String filePath;
+
     public ClassEntry(Class aClass, String filePath) {
         this.aClass = aClass;
         this.filePath = filePath;

@@ -9,8 +9,17 @@ Web：http://itgowo.com
 
 这是一个来自android开发写java的经验框架，支持热更新等，主要是自用库，现在发出来，很多第三方框架未集成，需要单独实现。默认接口都是POST形式，自动解析Body，也可以复写各种校验参数来达到过滤恶意攻击。
 
+此框架依赖netty部分库，具体使用时按需打包
+
+    implementation 'com.itgowo:BaseServer:0.0.21'
+
 ## 配置文件（config.properties）
-默认会创建一个配置文件在运行目录，包含基础配置信息和拓展信息，只有部分是必须的
+默认会创建一个配置文件在运行目录，包含基础配置信息和拓展信息，只有部分是必须的。
+新增swing界面配置管理工具，注意：都按String处理，内容类型需要注意下，要求是数值型的必须输入数字。
+
+    调用configWindow.showConfigWindow();
+
+![图形化配置界面](https://github.com/itgowo/BaseServer/blob/master/image/config.jpg)
     
     #Server Config
     #Thu Aug 16 20:51:30 CST 2018

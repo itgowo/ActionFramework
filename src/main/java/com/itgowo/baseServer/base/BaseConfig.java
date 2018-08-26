@@ -3,6 +3,7 @@ package com.itgowo.baseServer.base;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Properties;
 
@@ -11,6 +12,7 @@ import java.util.Properties;
  */
 public class BaseConfig {
     private static Properties configProperties;
+    private static long lastModifyTime;
     public static final String CONFIG_SERVER_PORT = "ServerPort";
     public static final String CONFIG_SERVER_IS_VALID_SIGN = "ServerIsValidSign";
     public static final String CONFIG_SERVER_IS_VALID_TIME_DIFFERENCE = "ServerIsValidTimeDifference";
@@ -52,14 +54,8 @@ public class BaseConfig {
             } else {
                 defaultValue = "";
             }
-            File file = new File(getFilePath().getParentFile(), "config.properties");
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            if (configProperties == null) {
-                configProperties = new Properties();
-            }
-            configProperties.load(new FileInputStream(file));
+            File file = getDefaultFile();
+            getProperty(file);
             String config = configProperties.getProperty(propertyName);
             if (config == null) {
                 configProperties.setProperty(propertyName, defaultValue);
@@ -71,6 +67,37 @@ public class BaseConfig {
         } catch (Exception e) {
             e.printStackTrace();
             return "";
+        }
+    }
+
+    public static File getDefaultFile() {
+        File file = new File(getFilePath().getParentFile(), "config.properties");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return file;
+    }
+
+    public static Properties getProperty(File file) {
+        try {
+            if (configProperties == null) {
+                configProperties = new Properties();
+                configProperties.load(new FileInputStream(file));
+                lastModifyTime = file.lastModified();
+            } else {
+                if (file.lastModified() != lastModifyTime) {
+                    configProperties.load(new FileInputStream(file));
+                    lastModifyTime = file.lastModified();
+                }
+            }
+            return configProperties;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return configProperties;
         }
     }
 
