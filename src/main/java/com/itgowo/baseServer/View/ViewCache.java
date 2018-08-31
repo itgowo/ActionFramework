@@ -1,7 +1,5 @@
 package com.itgowo.baseServer.View;
 
-import com.sun.istack.internal.NotNull;
-
 import javax.swing.*;
 import java.awt.*;
 
@@ -14,7 +12,7 @@ public class ViewCache<RootLayout extends JComponent> {
     private RootLayout rootLayout;
     private onViewListener listener;
 
-    public ViewCache(RootLayout rootLayout, @NotNull onViewListener listener) {
+    public ViewCache(RootLayout rootLayout, onViewListener listener) {
         this.rootLayout = rootLayout;
         this.listener = listener;
     }
