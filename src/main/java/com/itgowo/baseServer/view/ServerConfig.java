@@ -1,4 +1,4 @@
-package com.itgowo.baseServer.view1;
+package com.itgowo.baseServer.view;
 
 import com.itgowo.baseServer.ServerManager;
 import com.itgowo.baseServer.base.Dispatcher;

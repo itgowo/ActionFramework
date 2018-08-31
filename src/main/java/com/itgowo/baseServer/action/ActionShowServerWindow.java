@@ -1,7 +1,7 @@
 package com.itgowo.baseServer.action;
 
 import com.itgowo.SimpleServerCore.Http.HttpServerHandler;
-import com.itgowo.baseServer.view1.ServerConfig;
+import com.itgowo.baseServer.view.ServerConfig;
 import com.itgowo.baseServer.base.ActionRequest;
 import com.itgowo.baseServer.base.BaseConfig;
 import com.itgowo.baseServer.base.BaseRequest;
