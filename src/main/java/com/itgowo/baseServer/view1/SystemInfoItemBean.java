@@ -1,4 +1,4 @@
-package com.itgowo.baseServer.View;
+package com.itgowo.baseServer.view1;
 
 public class SystemInfoItemBean {
     private String key;
