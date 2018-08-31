@@ -32,6 +32,7 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_ACTION_PACKAGE = "ServerActionPackage";
     public static final String CONFIG_SERVER_AUTO_WATCH_ACTION = "ServerAutoWatchAction";
     public static final String CONFIG_SERVER_MAIN_CLASS = "ServerMainClass";
+    public static final String CONFIG_SERVER_SHOW_SERVER_WINDOW = "ServerShowServerWindow";
     public static Integer serverPort = null;
     public static Integer threadCoreNum = null;
     public static Integer threadMaxNum = null;
@@ -48,6 +49,7 @@ public class BaseConfig {
     public static String ServerActionPackage = null;
     public static String ServerMainClass = null;
     public static Boolean ServerAutoWatchAction = null;
+    public static Boolean ServerShowServerWindow = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
@@ -277,4 +279,12 @@ public class BaseConfig {
         return ServerAutoWatchAction;
     }
 
+    /**
+     * 设置是否自动打开服务控制界面，只在非窗口启动下有效
+     *
+     * @return
+     */
+    public static boolean getServerShowServerWindow() {
+        return getProperty(CONFIG_SERVER_SHOW_SERVER_WINDOW, false);
+    }
 }

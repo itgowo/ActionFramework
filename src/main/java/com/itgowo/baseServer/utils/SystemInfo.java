@@ -34,10 +34,10 @@ public class SystemInfo {
     }
 
     public SystemInfo() {
-//        threadMXBean = ManagementFactory.getThreadMXBean();
-//        runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-//        memoryMXBean = ManagementFactory.getMemoryMXBean();
-//        operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+        threadMXBean = ManagementFactory.getThreadMXBean();
+        runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        memoryMXBean = ManagementFactory.getMemoryMXBean();
+        operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
         tps = Dispatcher.tps;
     }
 

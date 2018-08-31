@@ -32,6 +32,9 @@ public class ServerConfig {
     private String[] columnNames = new String[]{"id", "名称", "状态", "WaitedTime/Count", "BlockedTime/Count", "锁名/锁拥有者/BlockedClass"};
     private ScheduledFuture scheduledFuture;
 
+
+    private String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+
     public ServerConfig(JFrame frame) {
         this.frame = frame;
         initSystemInfo();
@@ -114,6 +117,7 @@ public class ServerConfig {
 
     private void refreshSystemInfo() {
         List<SystemInfoItemBean> list = new ArrayList<>();
+        list.add(new SystemInfoItemBean("PID:", pid));
         list.add(new SystemInfoItemBean("线程数:", String.valueOf(ManagementFactory.getThreadMXBean().getThreadCount())));
         long usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         list.add(new SystemInfoItemBean("使用内存:", String.valueOf(usedMemory / 1024) + " KB"));
