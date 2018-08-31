@@ -45,13 +45,14 @@ public class ServerConfig {
         server_start_stop.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (server_start_stop.getText().equals("启动")) {
-                    ServerManager.initServer();
-                    server_start_stop.setText("停止");
-                } else {
-                    ServerManager.stop();
-                    server_start_stop.setText("启动");
-                }
+                if (ServerManager.getHttpServerManager().isRunning())
+                    if (server_start_stop.getText().equals("启动")) {
+                        ServerManager.initServer();
+                        server_start_stop.setText("停止");
+                    } else {
+                        ServerManager.stop();
+                        server_start_stop.setText("启动");
+                    }
             }
         });
         server_gc_button.addActionListener(new ActionListener() {
@@ -91,6 +92,11 @@ public class ServerConfig {
                 isShow = false;
             }
         });
+        if (ServerManager.getHttpServerManager().isRunning()){
+            server_start_stop.setText("停止");
+        } else {
+            server_start_stop.setText("启动");
+        }
     }
 
     public static void main(String[] args) {

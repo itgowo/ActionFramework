@@ -26,6 +26,11 @@ public class HttpServerManager {
     private ServerBootstrap serverBootstrap;
     private Logger log = LogU.getLogU(getClass().getName(), Level.ALL);
     private HttpServerHandler.onReceiveHandlerListener onReceiveHandlerListener;
+    private boolean isRunning = false;
+
+    public boolean isRunning() {
+        return isRunning;
+    }
 
     /**
      * 先设置回调后start
@@ -80,24 +85,27 @@ public class HttpServerManager {
                 onReceiveHandlerListener.onServerStarted(port);
             }
             log.info("The HttpServer is Started....");
+            isRunning = true;
             f.channel().closeFuture().sync();
             if (onReceiveHandlerListener != null) {
                 onReceiveHandlerListener.onServerStop();
             }
         } catch (Exception e) {
+            isRunning = false;
             e.printStackTrace();
         } finally {
-            workerGroup.shutdownGracefully();
-            bossGroup.shutdownGracefully();
+            if (workerGroup != null) workerGroup.shutdownGracefully();
+            if (bossGroup != null) bossGroup.shutdownGracefully();
         }
     }
 
     public void stop() {
+        isRunning = false;
         if (Dispatcher.scheduledFuture != null) {
             Dispatcher.scheduledFuture.cancel(true);
         }
         System.out.println("The HttpServer is Stopping");
-        workerGroup.shutdownGracefully();
-        bossGroup.shutdownGracefully();
+        if (workerGroup != null) workerGroup.shutdownGracefully();
+        if (bossGroup != null) bossGroup.shutdownGracefully();
     }
 }
