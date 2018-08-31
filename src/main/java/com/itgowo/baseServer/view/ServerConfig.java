@@ -7,7 +7,10 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -30,14 +33,14 @@ public class ServerConfig {
     private JFrame frame;
     private String[] columnNames = new String[]{"id", "名称", "状态", "WaitedTime/Count", "BlockedTime/Count", "锁名/锁拥有者/BlockedClass"};
     private ScheduledFuture scheduledFuture;
-    private static boolean isShow=false;
+    private static boolean isShow = false;
 
 
     private String pid = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
 
     public ServerConfig(JFrame frame) {
         this.frame = frame;
-        isShow=true;
+        isShow = true;
         initSystemInfo();
         server_start_stop.addActionListener(new ActionListener() {
             @Override
@@ -85,12 +88,13 @@ public class ServerConfig {
             @Override
             public void windowClosed(WindowEvent e) {
                 super.windowClosed(e);
-                isShow=false;
+                isShow = false;
             }
-        });}
+        });
+    }
 
     public static void main(String[] args) {
-        showServerWindow();
+        showServerWindow(true);
     }
 
     private void startMonitor() {
@@ -111,13 +115,13 @@ public class ServerConfig {
         }, 1, 3, TimeUnit.SECONDS);
     }
 
-    public static void showServerWindow() {
-        if (isShow){
+    public static void showServerWindow(boolean EXIT_ON_CLOSE) {
+        if (isShow) {
             return;
         }
         JFrame frame = new JFrame("服务管理  By 卢建超");
         frame.setContentPane(new ServerConfig(frame).rootPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE ? JFrame.EXIT_ON_CLOSE : WindowConstants.DISPOSE_ON_CLOSE);
 //        frame.pack();
         frame.setSize(800, 400);
         frame.setLocationRelativeTo(null);
