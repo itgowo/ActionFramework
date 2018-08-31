@@ -45,14 +45,13 @@ public class ServerConfig {
         server_start_stop.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (ServerManager.getHttpServerManager().isRunning())
-                    if (server_start_stop.getText().equals("启动")) {
-                        server_start_stop.setEnabled(ServerManager.initServer());
-                        server_start_stop.setText("停止");
-                    } else {
-                        ServerManager.stop();
-                        server_start_stop.setText("启动");
-                    }
+                if (server_start_stop.getText().equals("启动")) {
+                    server_start_stop.setEnabled(ServerManager.initServer());
+                    server_start_stop.setText("停止");
+                } else {
+                    ServerManager.stop();
+                    server_start_stop.setText("启动");
+                }
             }
         });
         server_gc_button.addActionListener(new ActionListener() {
