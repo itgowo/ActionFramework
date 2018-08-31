@@ -17,6 +17,7 @@ public class DemoMainClassForWindow implements HttpServerInitCallback {
         dispatcher.setValidTimeDifference(BaseConfig.getServerIsValidTimeDifference());
         dispatcher.setServerClientTimeDifference(BaseConfig.getServerActionTimeDifference());
         dispatcher.setValidParameter(BaseConfig.getServerIsValidParameter());
+        dispatcher.startAnalysisTps();
 //        dispatcher.startWatchAction();
         dispatcher.actionScanner(Test.class);
         dispatcher.setDispatcherListener(new DemoDispatcher());

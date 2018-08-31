@@ -1,5 +1,7 @@
 package com.itgowo.baseServer.utils;
 
+import com.itgowo.baseServer.base.Dispatcher;
+
 import javax.management.MBeanServerConnection;
 import java.lang.management.*;
 import java.util.List;
@@ -9,6 +11,11 @@ public class SystemInfo {
     private RuntimeMXBean runtimeMXBean;
     private MemoryMXBean memoryMXBean;
     private OperatingSystemMXBean operatingSystemMXBean;
+    private float tps;
+
+    public float getTps() {
+        return tps;
+    }
 
     public ThreadMXBean getThreadMXBean() {
         return threadMXBean;
@@ -27,10 +34,11 @@ public class SystemInfo {
     }
 
     public SystemInfo() {
-        threadMXBean = ManagementFactory.getThreadMXBean();
-        runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-        memoryMXBean = ManagementFactory.getMemoryMXBean();
-        operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+//        threadMXBean = ManagementFactory.getThreadMXBean();
+//        runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+//        memoryMXBean = ManagementFactory.getMemoryMXBean();
+//        operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+        tps = Dispatcher.tps;
     }
 
     public static void show() {

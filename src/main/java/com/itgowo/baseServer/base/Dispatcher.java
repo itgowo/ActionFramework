@@ -1,6 +1,7 @@
 package com.itgowo.baseServer.base;
 
 import com.itgowo.SimpleServerCore.Http.HttpServerHandler;
+import com.itgowo.baseServer.ServerManager;
 import com.itgowo.baseServer.utils.ClassEntry;
 import com.itgowo.baseServer.utils.Utils;
 import com.itgowo.baseServer.utils.WatchFileService;
@@ -14,12 +15,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author lujianchao
  * 请求事件处理类
  */
 public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, WatchFileService.onWatchFileListener {
+    public static float tps;
+    public static AtomicLong tpsTime = new AtomicLong();
+    public static AtomicLong tpsCount = new AtomicLong();
+    public static ScheduledFuture scheduledFuture;
     private ConcurrentHashMap<String, ActionRequest> actionTasks = new ConcurrentHashMap<>();
     private HashMap<String, String> actionPath = new HashMap<>();
     private onDispatcherListener dispatcherListener;
@@ -38,6 +46,10 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
      * 服务端与客户端时间差，BaseRequest中复写对应实现方法
      */
     private long serverClientTimeDifference = 60000;
+
+    public void startAnalysisTps() {
+        AnalysisTps();
+    }
 
     /**
      * 设置是否校验签名
@@ -246,7 +258,28 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
     public void onReceiveHandler(HttpServerHandler handler) {
         if (handler != null) {
             onDispatch(handler);
+            tpsCount.addAndGet(1);
         }
+    }
+
+    private void AnalysisTps() {
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+        }
+        scheduledFuture = ServerManager.getScheduledExecutorService().scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                long time;
+                if (tpsTime.get() == 0) {
+                    tpsTime.set(System.nanoTime());
+                } else {
+                    time = System.nanoTime() - tpsTime.get();
+                    tps = ((tpsCount.get() * 1000000000f / time));
+                    tpsTime.set(System.nanoTime());
+                    tpsCount.set(0);
+                }
+            }
+        }, 2, 5, TimeUnit.SECONDS);
     }
 
     /**

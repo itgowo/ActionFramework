@@ -1,6 +1,7 @@
 package com.itgowo.SimpleServerCore.Http;
 
 import com.itgowo.SimpleServerCore.Utils.LogU;
+import com.itgowo.baseServer.base.Dispatcher;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -92,6 +93,9 @@ public class HttpServerManager {
     }
 
     public void stop() {
+        if (Dispatcher.scheduledFuture != null) {
+            Dispatcher.scheduledFuture.cancel(true);
+        }
         System.out.println("The HttpServer is Stopping");
         workerGroup.shutdownGracefully();
         bossGroup.shutdownGracefully();

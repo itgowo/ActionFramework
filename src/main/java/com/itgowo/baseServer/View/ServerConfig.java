@@ -1,6 +1,7 @@
 package com.itgowo.baseServer.View;
 
 import com.itgowo.baseServer.ServerManager;
+import com.itgowo.baseServer.base.Dispatcher;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -120,6 +121,7 @@ public class ServerConfig {
         list.add(new SystemInfoItemBean("总可用内存:", String.valueOf(Runtime.getRuntime().totalMemory() / 1024 + " KB")));
         list.add(new SystemInfoItemBean("最大可用内存:", String.valueOf(Runtime.getRuntime().maxMemory() / 1024 + " KB")));
         list.add(new SystemInfoItemBean("类加载数:", String.valueOf(ManagementFactory.getClassLoadingMXBean().getLoadedClassCount())));
+        list.add(new SystemInfoItemBean("TPS处理量:", String.valueOf(Dispatcher.tps)));
         ViewCache viewCache = new ViewCache(server_info_rootLayout, new ViewCache.onViewListener() {
             @Override
             public JComponent onAddView() {

@@ -32,7 +32,6 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_ACTION_PACKAGE = "ServerActionPackage";
     public static final String CONFIG_SERVER_AUTO_WATCH_ACTION = "ServerAutoWatchAction";
     public static final String CONFIG_SERVER_MAIN_CLASS = "ServerMainClass";
-    public static final String CONFIG_SERVER_LIBS_DIR = "ServerLibsDir";
     public static Integer serverPort = null;
     public static Integer threadCoreNum = null;
     public static Integer threadMaxNum = null;
@@ -49,7 +48,6 @@ public class BaseConfig {
     public static String ServerActionPackage = null;
     public static String ServerMainClass = null;
     public static Boolean ServerAutoWatchAction = null;
-    public static String ServerLibsDir = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
@@ -279,15 +277,4 @@ public class BaseConfig {
         return ServerAutoWatchAction;
     }
 
-    /**
-     * 获取配置的库目录，只在Dispatcher和serverManager里有效，类加载时初始化
-     *
-     * @return
-     */
-    public static String getServerLibsDir() {
-        if (ServerLibsDir == null) {
-            ServerLibsDir = getProperty(CONFIG_SERVER_LIBS_DIR, "libs");
-        }
-        return ServerLibsDir;
-    }
 }
