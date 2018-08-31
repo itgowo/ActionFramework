@@ -31,6 +31,8 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_DYNAMIC_ACTION_DIR = "ServerDynamicActionDir";
     public static final String CONFIG_SERVER_ACTION_PACKAGE = "ServerActionPackage";
     public static final String CONFIG_SERVER_AUTO_WATCH_ACTION = "ServerAutoWatchAction";
+    public static final String CONFIG_SERVER_MAIN_CLASS = "ServerMainClass";
+    public static final String CONFIG_SERVER_LIBS_DIR = "ServerLibsDir";
     public static Integer serverPort = null;
     public static Integer threadCoreNum = null;
     public static Integer threadMaxNum = null;
@@ -45,7 +47,9 @@ public class BaseConfig {
     public static Boolean ServerIsValidParameter = null;
     public static String ServerDynamicActionDir = null;
     public static String ServerActionPackage = null;
+    public static String ServerMainClass = null;
     public static Boolean ServerAutoWatchAction = null;
+    public static String ServerLibsDir = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
@@ -252,6 +256,18 @@ public class BaseConfig {
     }
 
     /**
+     * 如果想用界面化方式启动服务，需要设置该值,不设置为只支持传统启动服务
+     *
+     * @return
+     */
+    public static String getServerMainClass() {
+        if (ServerMainClass == null) {
+            ServerMainClass = getProperty(CONFIG_SERVER_MAIN_CLASS, null);
+        }
+        return ServerMainClass;
+    }
+
+    /**
      * 设置是否热更新动态接口
      *
      * @return
@@ -261,5 +277,17 @@ public class BaseConfig {
             ServerAutoWatchAction = getProperty(CONFIG_SERVER_AUTO_WATCH_ACTION, false);
         }
         return ServerAutoWatchAction;
+    }
+
+    /**
+     * 获取配置的库目录，只在Dispatcher和serverManager里有效，类加载时初始化
+     *
+     * @return
+     */
+    public static String getServerLibsDir() {
+        if (ServerLibsDir == null) {
+            ServerLibsDir = getProperty(CONFIG_SERVER_LIBS_DIR, "libs");
+        }
+        return ServerLibsDir;
     }
 }

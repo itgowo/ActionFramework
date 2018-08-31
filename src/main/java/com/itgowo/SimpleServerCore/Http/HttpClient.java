@@ -62,6 +62,16 @@ public class HttpClient {
                                 listener.onError(throwable);
                             }
                         }
+
+                        @Override
+                        public void onServerStarted(int serverPort) {
+
+                        }
+
+                        @Override
+                        public void onServerStop() {
+
+                        }
                     }));
                 }
             });

@@ -23,7 +23,7 @@ public class ConfigWindow {
     private JPanel rootList;
     private Map<String, String> stringMap = new HashMap<>();
 
-    public ConfigWindow() {
+    public ConfigWindow(String arg) {
         readButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -98,9 +98,10 @@ public class ConfigWindow {
      */
     public static void showConfigWindow() {
         JFrame frame = new JFrame("服务器默认配置工具 By 卢建超");
-        frame.setContentPane(new ConfigWindow().rootPanel);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setContentPane(new ConfigWindow("").rootPanel);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.pack();
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 

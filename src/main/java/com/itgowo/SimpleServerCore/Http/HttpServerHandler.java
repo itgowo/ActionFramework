@@ -44,7 +44,7 @@ public class HttpServerHandler {
                 .append("\r\nparameters=" + parameters)
                 .append(httpResponse == null ? "" : "\r\nhttpResponse=" + httpResponse.toString())
                 .append(httpRequest == null || httpRequest.headers() == null || httpRequest.headers().entries() == null
-                                ? "" : "\r\nmHeaders=" + httpRequest.headers().entries())
+                        ? "" : "\r\nmHeaders=" + httpRequest.headers().entries())
                 .append("\r\nbody='" + getBody(null) + '\'' + "\r\n}");
         return stringBuilder.toString();
     }
@@ -78,7 +78,7 @@ public class HttpServerHandler {
         if (charset == null) {
             charset = Charset.defaultCharset();
         }
-        if (body==null){
+        if (body == null) {
             return String.valueOf("");
         }
         return new String(body, charset);
@@ -121,5 +121,9 @@ public class HttpServerHandler {
         void onReceiveHandler(HttpServerHandler handler);
 
         void onError(Throwable throwable);
+
+        void onServerStarted(int serverPort);
+
+        void onServerStop();
     }
 }

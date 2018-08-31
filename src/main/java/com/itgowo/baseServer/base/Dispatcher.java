@@ -136,23 +136,29 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
             return;
         }
         Class c = classEntry.getaClass();
+
+        Constructor<?>[] constructors = c.getConstructors();
+        if (constructors.length == 0) {
+            return;
+        }
+        //判断是否有无参构造器
+        boolean has = false;
+        for (int i1 = 0; i1 < constructors.length; i1++) {
+            if (constructors[i1].getParameterCount() == 0) {
+                has = true;
+                break;
+            }
+        }
+        if (!has) {
+            return;
+        }
+        Object o = null;
         try {
-            Constructor<?>[] constructors = c.getConstructors();
-            if (constructors.length == 0) {
-                return;
-            }
-            //判断是否有无参构造器
-            boolean has = false;
-            for (int i1 = 0; i1 < constructors.length; i1++) {
-                if (constructors[i1].getParameterCount() == 0) {
-                    has = true;
-                    break;
-                }
-            }
-            if (!has) {
-                return;
-            }
-            Object o = c.newInstance();
+            o = c.newInstance();
+        } catch (Exception e) {
+            return;
+        }
+        try {
             if (o instanceof ActionRequest) {
                 Object f = Utils.getFinalFieldValueByName("ACTION", c);
                 if (f != null && f instanceof String) {
@@ -220,8 +226,9 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
      * @return
      */
     public Dispatcher unRegisterAction(String key) {
-        actionTasks.remove(key);
+        ActionRequest loader = actionTasks.remove(key);
         System.out.println("Dispatcher.unRegisterAction " + key);
+        Utils.clossClass(loader.getClass());
         return this;
     }
 
@@ -244,6 +251,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
 
     /**
      * 热加载状态下所有新请求会暂停处理，已在处理中的请求不会干预，直到允许处理，默认入口预置循环
+     *
      * @param isHotLoading
      */
     private void setLoadActionStatus(boolean isHotLoading) {
@@ -253,6 +261,16 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
     @Override
     public void onError(Throwable throwable) {
         if (dispatcherListener != null) dispatcherListener.onError(throwable);
+    }
+
+    @Override
+    public void onServerStarted(int serverPort) {
+        if (dispatcherListener != null) dispatcherListener.onServerStarted(serverPort);
+    }
+
+    @Override
+    public void onServerStop() {
+        if (dispatcherListener != null) dispatcherListener.onServerStop();
     }
 
     /**
@@ -427,5 +445,9 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
          * @throws Exception
          */
         public String toJson(Object o) throws Exception;
+
+        public void onServerStarted(int serverPort);
+
+        public void onServerStop();
     }
 }

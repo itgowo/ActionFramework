@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -155,7 +156,6 @@ public class Utils {
         }
         return files;
     }
-
     /**
      * 获取执行文件或者执行目录
      *
@@ -164,7 +164,14 @@ public class Utils {
     public static File getJarFile(Class c) {
         return new File(c.getProtectionDomain().getCodeSource().getLocation().getFile());
     }
-
+    public static void clossClass(Class c){
+        try {
+            URLClassLoader loader= (URLClassLoader) c.getClassLoader();
+            loader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     /**
      * 通过常量属性名字,在字节码中获取到一个常量的值
      * 这个方法常用于取出接口中常量的值,可以适用于接口中的常量;类中的常量,但是仅限于常量.如果是变量,返回为空
@@ -190,5 +197,10 @@ public class Utils {
         return null;
     }
 
-
+    public static void loadLibrary(File path){
+        List<File> files=getAllFileFromDir(path,"jar");
+        for (int i = 0; i < files.size(); i++) {
+            getClasssFromJarFile(files.get(i).getAbsolutePath(),"");
+        }
+    }
 }

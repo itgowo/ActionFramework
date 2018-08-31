@@ -27,6 +27,16 @@ public class SimpleServer {
             public void onError(Throwable throwable) {
                 throwable.printStackTrace();
             }
+
+            @Override
+            public void onServerStarted(int serverPort) {
+
+            }
+
+            @Override
+            public void onServerStop() {
+
+            }
         });
         httpServerManager.start(12000);
     }

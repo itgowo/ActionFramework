@@ -38,7 +38,8 @@ public class HttpServerManager {
 
     /**
      * 设置线程池线程数
-     * @param bossThreadNum  百万级QPS设置为2或3即可
+     *
+     * @param bossThreadNum   百万级QPS设置为2或3即可
      * @param workerThreadNum 百万级QPS设置为4到6即可
      * @return
      */
@@ -74,9 +75,14 @@ public class HttpServerManager {
                     }).option(ChannelOption.SO_BACKLOG, 4096).childOption(ChannelOption.TCP_NODELAY, true)
                     .childOption(ChannelOption.SO_KEEPALIVE, false);
             ChannelFuture f = serverBootstrap.bind(port).sync();
-
+            if (onReceiveHandlerListener != null) {
+                onReceiveHandlerListener.onServerStarted(port);
+            }
             log.info("The HttpServer is Started....");
             f.channel().closeFuture().sync();
+            if (onReceiveHandlerListener != null) {
+                onReceiveHandlerListener.onServerStop();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
