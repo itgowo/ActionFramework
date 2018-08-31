@@ -47,7 +47,7 @@ public class ServerConfig {
             public void actionPerformed(ActionEvent e) {
                 if (ServerManager.getHttpServerManager().isRunning())
                     if (server_start_stop.getText().equals("启动")) {
-                        ServerManager.initServer();
+                        server_start_stop.setEnabled(ServerManager.initServer());
                         server_start_stop.setText("停止");
                     } else {
                         ServerManager.stop();
@@ -92,7 +92,7 @@ public class ServerConfig {
                 isShow = false;
             }
         });
-        if (ServerManager.getHttpServerManager().isRunning()){
+        if (ServerManager.getHttpServerManager().isRunning()) {
             server_start_stop.setText("停止");
         } else {
             server_start_stop.setText("启动");

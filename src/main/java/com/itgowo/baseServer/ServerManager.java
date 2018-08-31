@@ -50,6 +50,9 @@ public class ServerManager {
      * @return
      */
     public static boolean searchMainClass() {
+        if (httpServerInitCallback!=null){
+            return true;
+        }
         try {
             String mainClass = BaseConfig.getServerMainClass();
             if (mainClass != null && mainClass.trim().length() != 0) {
@@ -66,9 +69,9 @@ public class ServerManager {
     /**
      * 使用界面控制服务，初始化后台服务框架
      */
-    public static void initServer() {
+    public static boolean initServer() {
         if (httpServerInitCallback == null) {
-            return;
+            return false;
         } else {
             try {
                 httpServerInitCallback.onServerConfigPrepare(ServerManager.getHttpServerManager());
@@ -86,6 +89,7 @@ public class ServerManager {
             }
         });
         mGameThread.start();
+        return true;
     }
 
     public interface onErrorListener {
