@@ -9,9 +9,9 @@ Web：http://itgowo.com
 
 这是一个来自android开发写java的经验框架，支持热更新等，主要是自用库，现在发出来，很多第三方框架未集成，需要单独实现。默认接口都是POST形式，自动解析Body，也可以复写各种校验参数来达到过滤恶意攻击。
 
-此框架依赖netty部分库，具体使用时按需打包
+此框架依赖netty部分库，具体使用时按需打包,库内有demo文件，支持接口触发或者直接运行Jar打开配置界面。
 
-    implementation 'com.itgowo:BaseServer:0.0.21'
+    implementation 'com.itgowo:BaseServer:0.0.33'
 
 ## 配置文件（config.properties）
 默认会创建一个配置文件在运行目录，包含基础配置信息和拓展信息，只有部分是必须的。
@@ -28,7 +28,7 @@ Web：http://itgowo.com
     ServerRedisAuth=test123 //redis暂时未集成
     ServerRedisUrl=localhost //redis地址
     ServerMySQLUser=test //数据库未集成
-    ServerActionPackage=com.game.stzb.action //设置Action接口包名，过滤
+    ServerActionPackage=com.itgowo.baseServer.action;com.itgowo.baseServer.demo;com.game //设置Action接口包名，过滤，支持数组
     ServerNettyWorkerThreadNum=6 //netty WorkerThread线程数
     ServerDynamicActionDir=/Users/lujianchao/111/action //设置动态加载替换接口目录
     ServerIsValidParameter=true //是否校验参数
@@ -38,7 +38,43 @@ Web：http://itgowo.com
     ServerAutoWatchAction=false //是否自动监测指定目录接口更新，自动加载覆盖或添加删除接口
     ServerMySQLUrl=jdbc\:mysql\://localhost\:3306/test?characterEncoding\=utf-8&amp&useSSL\=false ////数据库未集成
     ServerIsValidSign=false //是否校验签名
+    ServerAnalysisTps=false //是否开启tps统计，Dispatcher.tps获取静态变量，float类型，每隔5秒计算一次
+    ServerMainClass=com.itgowo.baseServer.demo.DemoMainClassForWindow    //设置服务器配置启动类，使用界面控制必须实现，代码控制不要求，最好使用ServerManager.getHttpServerManager获取单例，这样打开页面也可以对服务控制
+    ServerShowServerWindow=true
 
+## 服务控制界面
+
+监控为进程监控，tps也是静态变量，不受一个项目启动服务数限制，启动多个server后，TPS为总处理量，tps计算节点在向用户发送数据时，所以比较有意义。
+
+
+    调用ServerConfig.showServerWindow();
+
+![图形化控制界面](https://github.com/itgowo/BaseServer/blob/master/image/server.png)
+
+
+## 配置request，ACTION必须全工程唯一，非post请求必须path路径全匹配，不能模糊匹配
+
+    public class ActionShowServerWindow implements ActionRequest {
+        public static final String ACTION = "ShowServerWindow";
+    
+        @Override
+        public void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception {
+            if (BaseConfig.isShowServerWindow()) {
+                ServerConfig.showServerWindow();
+            }
+            handler.sendData(new ServerJsonEntity(), true);
+        }
+    }
+    
+
+    public class DemoActionRequestGet implements ActionRequestGet {
+        public static final String ACTION = "/aa/helloword";
+    
+        @Override
+        public void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception {
+            handler.sendData(ACTION,false);
+        }
+    }
 
 ## 配置DispatcherListener
 
@@ -46,18 +82,6 @@ Web：http://itgowo.com
         @Override
         public void onError(Throwable throwable) {
 
-        }
-
-        @Override
-        public void doRequestOtherMethod(HttpServerHandler httpServerHandler, ActionRequest actionRequest) {
-            if (httpServerHandler.getHttpRequest().method() == HttpMethod.GET) {
-                String html1 = readToString("config/html_index");
-                try {
-                    httpServerHandler.sendData(html1, false);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
         @Override
@@ -265,7 +289,7 @@ Web：http://itgowo.com
     }
 
 
-## 配置启动参数
+## 配置启动参数，适合一个项目多个server
 
         public static void main(String[] args) {
         HttpServerManager mHttpServer = new HttpServerManager();
@@ -293,4 +317,38 @@ Web：http://itgowo.com
             }
         });
         mGameThread.start();
+    }
+    
+    
+    
+## 推荐这种方式配置，单例server,图形化和代码控制台都是一个server
+
+    public class Main implements HttpServerInitCallback{
+
+
+        public static void main(String[] args) {
+            ServerManager.searchMainClass();
+            ServerManager.initServer();
+        }
+        
+         @Override
+        public void onServerConfigPrepare(HttpServerManager serverManager) {
+            Dispatcher dispatcher = new Dispatcher();
+            serverManager.setThreadConfig(BaseConfig.getNettyBossGroupThreadNum(), BaseConfig.getNettyWorkerGroupThreadNum());
+            dispatcher.setValidSign(BaseConfig.getServerIsValidSign());
+            dispatcher.setValidTimeDifference(BaseConfig.getServerIsValidTimeDifference());
+            dispatcher.setServerClientTimeDifference(BaseConfig.getServerActionTimeDifference());
+            dispatcher.setValidParameter(BaseConfig.getServerIsValidParameter());
+            if (BaseConfig.isAnalysisTps())dispatcher.startAnalysisTps();
+    //        dispatcher.startWatchAction();
+            dispatcher.actionScanner(DemoMainClassForWindow.class);
+            dispatcher.setDispatcherListener(new DemoDispatcher());
+            serverManager.setOnReceiveHandleListener(dispatcher);
+        }
+    
+        @Override
+        public void onError(Exception e) {
+            e.printStackTrace();
+            ServerManager.onError(e);
+        }
     }
