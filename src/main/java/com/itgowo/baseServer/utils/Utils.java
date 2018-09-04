@@ -1,5 +1,8 @@
 package com.itgowo.baseServer.utils;
 
+import com.itgowo.baseServer.classUtils.ClassEntry;
+import com.itgowo.baseServer.classUtils.ServerClassLoader;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -157,14 +160,7 @@ public class Utils {
         return files;
     }
 
-    /**
-     * 获取执行文件或者执行目录
-     *
-     * @return
-     */
-    public static File getJarFile(Class c) {
-        return new File(c.getProtectionDomain().getCodeSource().getLocation().getFile());
-    }
+
 
     public static void clossClass(Class c) {
         try {
@@ -201,12 +197,5 @@ public class Utils {
             }
         }
         return null;
-    }
-
-    public static void loadLibrary(File path) {
-        List<File> files = getAllFileFromDir(path, "jar");
-        for (int i = 0; i < files.size(); i++) {
-            getClasssFromJarFile(files.get(i).getAbsolutePath(), "");
-        }
     }
 }

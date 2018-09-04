@@ -2,7 +2,8 @@ package com.itgowo.baseServer.base;
 
 import com.itgowo.SimpleServerCore.Http.HttpServerHandler;
 import com.itgowo.baseServer.ServerManager;
-import com.itgowo.baseServer.utils.ClassEntry;
+import com.itgowo.baseServer.classUtils.ClassEntry;
+import com.itgowo.baseServer.classUtils.ClassUtils;
 import com.itgowo.baseServer.utils.Utils;
 import com.itgowo.baseServer.utils.WatchFileService;
 import io.netty.handler.codec.http.HttpMethod;
@@ -10,13 +11,16 @@ import io.netty.handler.codec.http.HttpMethod;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -33,7 +37,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
     private onDispatcherListener dispatcherListener;
     private WatchFileService watchFileService;
     private boolean isValidSign = true;
-    private volatile boolean isHotLoading = false;
+    private volatile AtomicBoolean isHotLoading = new AtomicBoolean(false);
     /**
      * 是否校验时差,BaseRequest中复写对应实现方法
      */
@@ -49,6 +53,12 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
 
     public void startAnalysisTps() {
         AnalysisTps();
+    }
+
+    public void stopAnalysisTps() {
+        if (scheduledFuture != null) {
+            scheduledFuture.cancel(true);
+        }
     }
 
     /**
@@ -99,32 +109,34 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
      * @param mainClass 主项目工程内class文件，推荐main类
      */
     public void actionScanner(Class mainClass) {
-        File file = Utils.getJarFile(mainClass);
-        String packagePath = BaseConfig.getServerActionPackage();
-        if (packagePath == null || packagePath.trim().length() < 1) {
+        File file = ClassUtils.getJarFile(mainClass);
+        List<String> packagePaths = BaseConfig.getServerActionPackageList();
+        if (packagePaths == null || packagePaths.isEmpty()) {
             if (dispatcherListener != null) {
                 dispatcherListener.onError(new Throwable("ServerActionPackage配置不正确，配置格式例如com.game.stzb.action或者com/game/stzb/action,允许继续运行"));
             }
         }
-        packagePath = packagePath.replace(".", "/");
-        List<ClassEntry> classes = null;
-        if (file.isFile()) {
-            classes = Utils.getClasssFromJarFile(file.getAbsolutePath(), packagePath);
-        } else {
-            classes = Utils.getClassNameByFile(file.getAbsolutePath(), true, file.getAbsolutePath(), packagePath);
+        System.out.println("\r\n找到如下Action处理器：\r\n");
+        checkAndRegister(loadClass(file, packagePaths));
+
+        System.out.println("-----------------\r\n");
+    }
+
+    private List<ClassEntry> loadClass(File file, List<String> packagePath) {
+        if (packagePath == null || packagePath.size() == 0) {
+            return new ArrayList<>();
         }
+        List<ClassEntry> classes = ClassUtils.getClassList(file.getAbsolutePath(), packagePath);
         if (BaseConfig.getServerDynamicActionDir() != null && BaseConfig.getServerDynamicActionDir().trim().length() > 0) {
             File dynamicDir = new File(BaseConfig.getServerDynamicActionDir());
-            List<ClassEntry> dynamicClass = Utils.getClassByDir(dynamicDir, packagePath);
+            List<ClassEntry> dynamicClass = ClassUtils.getClassList(dynamicDir.getAbsolutePath(), packagePath);
             classes.addAll(dynamicClass);
             if (BaseConfig.getServerAutoWatchAction()) {
                 watchFileService = new WatchFileService(dynamicDir.getAbsolutePath());
                 watchFileService.startWatch(this);
             }
         }
-        System.out.println("\r\n找到如下Action处理器：\r\n");
-        checkAndRegister(classes);
-        System.out.println("-----------------\r\n");
+        return classes;
     }
 
     /**
@@ -144,26 +156,35 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
      * @param classEntry
      */
     private void checkAndRegisterAction(ClassEntry classEntry) {
-        if (classEntry == null || classEntry.getaClass() == null) {
+        if (classEntry == null || classEntry.getClassObject() == null) {
             return;
         }
-        Class c = classEntry.getaClass();
-
-        Constructor<?>[] constructors = c.getConstructors();
-        if (constructors.length == 0) {
-            return;
-        }
-        //判断是否有无参构造器
-        boolean has = false;
-        for (int i1 = 0; i1 < constructors.length; i1++) {
-            if (constructors[i1].getParameterCount() == 0) {
-                has = true;
-                break;
+        Class c = classEntry.getClassObject();
+        try {
+            if (c == null || Modifier.isInterface(c.getModifiers()) || Modifier.isAbstract(c.getModifiers())) {
+                return;
             }
-        }
-        if (!has) {
+
+            Constructor<?>[] constructors = c.getDeclaredConstructors();
+            if (constructors.length == 0) {
+                return;
+            }
+            //判断是否有无参构造器
+            boolean has = false;
+            for (int i1 = 0; i1 < constructors.length; i1++) {
+                if (constructors[i1].getParameterCount() == 0) {
+                    has = true;
+                    break;
+                }
+            }
+            if (!has) {
+                return;
+            }
+        } catch (SecurityException e) {
+            e.printStackTrace();
             return;
         }
+
         Object o = null;
         try {
             o = c.newInstance();
@@ -240,7 +261,6 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
     public Dispatcher unRegisterAction(String key) {
         ActionRequest loader = actionTasks.remove(key);
         System.out.println("Dispatcher.unRegisterAction " + key);
-        Utils.clossClass(loader.getClass());
         return this;
     }
 
@@ -288,7 +308,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
      * @param isHotLoading
      */
     private void setLoadActionStatus(boolean isHotLoading) {
-        this.isHotLoading = isHotLoading;
+        this.isHotLoading.set(isHotLoading);
     }
 
     @Override
@@ -381,7 +401,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
             }
             return;
         }
-        while (isHotLoading) {
+        while (isHotLoading.get()) {
             try {
                 this.wait(5);
             } catch (InterruptedException e) {
@@ -408,22 +428,33 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
     @Override
     public void onCreateFile(String dir, String fileName) {
         System.out.println("HotLoad:------registerAction");
+        File file = new File(dir + File.separator + fileName);
+        List<String> stringList = BaseConfig.getServerActionPackageList();
+        List<ClassEntry> classEntries = new ArrayList<>();
+        for (int i = 0; i < stringList.size(); i++) {
+            classEntries.addAll(loadClass(file, stringList));
+        }
         setLoadActionStatus(true);
-        ClassEntry c = Utils.getClassByClassFile(new File(dir + File.separator + fileName), BaseConfig.getServerActionPackage());
-        checkAndRegisterAction(c);
+        for (int i = 0; i < classEntries.size(); i++) {
+            checkAndRegisterAction(classEntries.get(i));
+        }
         setLoadActionStatus(false);
         System.out.println("HotLoad:------\r\n");
     }
 
     @Override
     public void onModifyFile(String dir, String fileName) {
-        ClassEntry c = Utils.getClassByClassFile(new File(dir + File.separator + fileName), BaseConfig.getServerActionPackage());
-        if (c == null || c.getaClass() == null) {
-            return;
+        File file = new File(dir + File.separator + fileName);
+        List<String> stringList = BaseConfig.getServerActionPackageList();
+        List<ClassEntry> classEntries = new ArrayList<>();
+        for (int i = 0; i < stringList.size(); i++) {
+            classEntries.addAll(loadClass(file, stringList));
         }
         System.out.println("HotLoad:------registerAction");
         setLoadActionStatus(true);
-        checkAndRegisterAction(c);
+        for (int i = 0; i < classEntries.size(); i++) {
+            checkAndRegisterAction(classEntries.get(i));
+        }
         setLoadActionStatus(false);
         System.out.println("HotLoad:------\r\n");
     }

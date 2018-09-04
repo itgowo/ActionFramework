@@ -12,8 +12,8 @@ public class ActionShowServerWindow implements ActionRequest {
 
     @Override
     public void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception {
-        if (BaseConfig.getServerShowServerWindow()) {
-            ServerConfig.showServerWindow(false);
+        if (BaseConfig.isShowServerWindow()) {
+            ServerConfig.showServerWindow();
         }
         handler.sendData(new ServerJsonEntity(), true);
     }

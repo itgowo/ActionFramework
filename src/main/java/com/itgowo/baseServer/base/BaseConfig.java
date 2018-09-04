@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -33,23 +35,9 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_AUTO_WATCH_ACTION = "ServerAutoWatchAction";
     public static final String CONFIG_SERVER_MAIN_CLASS = "ServerMainClass";
     public static final String CONFIG_SERVER_SHOW_SERVER_WINDOW = "ServerShowServerWindow";
-    public static Integer serverPort = null;
-    public static Integer threadCoreNum = null;
-    public static Integer threadMaxNum = null;
-    public static Integer threadCacheTime = null;
-    public static Integer nettyBossGroupThreadNum = null;
-    public static Integer nettyWorkerGroupThreadNum = null;
-    public static String serverMySQLUrl = null;
-    public static String serverRedisUrl = null;
-    public static Boolean ServerIsValidSign = null;
-    public static Boolean ServerIsValidTimeDifference = null;
-    public static Long ServerActionTimeDifference = null;
-    public static Boolean ServerIsValidParameter = null;
-    public static String ServerDynamicActionDir = null;
-    public static String ServerActionPackage = null;
-    public static String ServerMainClass = null;
-    public static Boolean ServerAutoWatchAction = null;
-    public static Boolean ServerShowServerWindow = null;
+    public static final String CONFIG_SERVER_ANALYSIS_TPS = "ServerAnalysisTps";
+
+    public static List<String> ServerActionPackage = null;
 
     public static String getProperty(String propertyName, String defaultValue) {
         try {
@@ -141,17 +129,11 @@ public class BaseConfig {
     }
 
     public static int getServerPort() {
-        if (serverPort == null) {
-            serverPort = getProperty(CONFIG_SERVER_PORT, 1661);
-        }
-        return serverPort;
+        return getProperty(CONFIG_SERVER_PORT, 1661);
     }
 
     public static String getServerMySQLUrl() {
-        if (serverMySQLUrl == null) {
-            serverMySQLUrl = getProperty(CONFIG_SERVER_MYSQL_URL, "jdbc:mysql://localhost:3306/dbname?characterEncoding=utf-8&amp;useSSL=false");
-        }
-        return serverMySQLUrl;
+        return getProperty(CONFIG_SERVER_MYSQL_URL, "jdbc:mysql://localhost:3306/dbname?characterEncoding=utf-8&amp;useSSL=false");
     }
 
     public static String getServerMySQLUser() {
@@ -163,84 +145,51 @@ public class BaseConfig {
     }
 
     public static String getServerRedisUrl() {
-        if (serverRedisUrl == null) {
-            serverRedisUrl = getProperty(CONFIG_SERVER_REDIS_URL, "localhost");
-        }
-        return serverRedisUrl;
+        return getProperty(CONFIG_SERVER_REDIS_URL, "localhost");
     }
 
     public static String getServerRedisAuth() {
         return getProperty(CONFIG_SERVER_REDIS_AUTH, "redis密码");
     }
 
-    public static Integer getThreadCoreNum() {
-        if (threadCoreNum == null) {
-            threadCoreNum = getProperty(CONFIG_SERVER_THREAD_CORE_NUM, 10);
-        }
-        return threadCoreNum;
+    public static int getThreadCoreNum() {
+        return getProperty(CONFIG_SERVER_THREAD_CORE_NUM, 10);
     }
 
-    public static Integer getThreadMaxNum() {
-        if (threadMaxNum == null) {
-            threadMaxNum = getProperty(CONFIG_SERVER_THREAD_MAX_NUM, 200);
-        }
-        return threadMaxNum;
+    public static int getThreadMaxNum() {
+        return getProperty(CONFIG_SERVER_THREAD_MAX_NUM, 200);
     }
 
-    public static Integer getThreadCacheTime() {
-        if (threadCacheTime == null) {
-            threadCacheTime = getProperty(CONFIG_SERVER_THREAD_CACHE_TIME, 180);
-        }
-        return threadCacheTime;
+    public static int getThreadCacheTime() {
+        return getProperty(CONFIG_SERVER_THREAD_CACHE_TIME, 180);
     }
 
-    public static Integer getNettyBossGroupThreadNum() {
-        if (nettyBossGroupThreadNum == null) {
-            nettyBossGroupThreadNum = getProperty(CONFIG_SERVER_NETTY_BOSSGROUP_THREAD_NUM, 3);
-        }
-        return nettyBossGroupThreadNum;
+    public static int getNettyBossGroupThreadNum() {
+        return getProperty(CONFIG_SERVER_NETTY_BOSSGROUP_THREAD_NUM, 3);
     }
 
-    public static Integer getNettyWorkerGroupThreadNum() {
-        if (nettyWorkerGroupThreadNum == null) {
-            nettyWorkerGroupThreadNum = getProperty(CONFIG_SERVER_NETTY_WORKER_THREAD_NUM, 6);
-        }
-        return nettyWorkerGroupThreadNum;
+    public static int getNettyWorkerGroupThreadNum() {
+        return getProperty(CONFIG_SERVER_NETTY_WORKER_THREAD_NUM, 6);
     }
 
     public static boolean getServerIsValidSign() {
-        if (ServerIsValidSign == null) {
-            ServerIsValidSign = getProperty(CONFIG_SERVER_IS_VALID_SIGN, true);
-        }
-        return ServerIsValidSign;
+        return getProperty(CONFIG_SERVER_IS_VALID_SIGN, true);
     }
 
     public static boolean getServerIsValidTimeDifference() {
-        if (ServerIsValidTimeDifference == null) {
-            ServerIsValidTimeDifference = getProperty(CONFIG_SERVER_IS_VALID_TIME_DIFFERENCE, true);
-        }
-        return ServerIsValidTimeDifference;
+        return getProperty(CONFIG_SERVER_IS_VALID_TIME_DIFFERENCE, true);
     }
 
     public static boolean getServerIsValidParameter() {
-        if (ServerIsValidParameter == null) {
-            ServerIsValidParameter = getProperty(CONFIG_SERVER_IS_VALID_PARAMETER, true);
-        }
-        return ServerIsValidParameter;
+        return getProperty(CONFIG_SERVER_IS_VALID_PARAMETER, true);
     }
 
     public static long getServerActionTimeDifference() {
-        if (ServerActionTimeDifference == null) {
-            ServerActionTimeDifference = getProperty(CONFIG_SERVER_ACTION_TIME_DIFFERENCE, 60000l);
-        }
-        return ServerActionTimeDifference;
+        return getProperty(CONFIG_SERVER_ACTION_TIME_DIFFERENCE, 60000l);
     }
 
     public static String getServerDynamicActionDir() {
-        if (ServerDynamicActionDir == null) {
-            ServerDynamicActionDir = getProperty(CONFIG_SERVER_DYNAMIC_ACTION_DIR, null);
-        }
-        return ServerDynamicActionDir;
+        return getProperty(CONFIG_SERVER_DYNAMIC_ACTION_DIR, null);
     }
 
     /**
@@ -248,10 +197,10 @@ public class BaseConfig {
      *
      * @return
      */
-    public static String getServerActionPackage() {
-        if (ServerActionPackage == null) {
-            ServerActionPackage = getProperty(CONFIG_SERVER_ACTION_PACKAGE, null);
-        }
+    public static List<String> getServerActionPackageList() {
+        String s = getProperty(CONFIG_SERVER_ACTION_PACKAGE, null);
+        String[] split = s.split(";");
+        ServerActionPackage = Arrays.asList(split);
         return ServerActionPackage;
     }
 
@@ -261,10 +210,7 @@ public class BaseConfig {
      * @return
      */
     public static String getServerMainClass() {
-        if (ServerMainClass == null) {
-            ServerMainClass = getProperty(CONFIG_SERVER_MAIN_CLASS, null);
-        }
-        return ServerMainClass;
+        return getProperty(CONFIG_SERVER_MAIN_CLASS, null);
     }
 
     /**
@@ -273,18 +219,23 @@ public class BaseConfig {
      * @return
      */
     public static boolean getServerAutoWatchAction() {
-        if (ServerAutoWatchAction == null) {
-            ServerAutoWatchAction = getProperty(CONFIG_SERVER_AUTO_WATCH_ACTION, false);
-        }
-        return ServerAutoWatchAction;
+        return getProperty(CONFIG_SERVER_AUTO_WATCH_ACTION, false);
     }
 
     /**
-     * 设置是否自动打开服务控制界面，只在非窗口启动下有效
+     * 设置是否可以打开服务控制界面，接口可以添加打开，或者jar文件打开
      *
      * @return
      */
-    public static boolean getServerShowServerWindow() {
+    public static boolean isShowServerWindow() {
         return getProperty(CONFIG_SERVER_SHOW_SERVER_WINDOW, false);
+    }
+
+    /**
+     * 是否打开TPS分析开关，默认关
+     * @return
+     */
+    public static boolean isAnalysisTps() {
+        return getProperty(CONFIG_SERVER_ANALYSIS_TPS, false);
     }
 }

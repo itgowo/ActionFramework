@@ -4,6 +4,7 @@ import com.itgowo.SimpleServerCore.Http.HttpServerManager;
 import com.itgowo.baseServer.Test;
 import com.itgowo.baseServer.base.BaseConfig;
 import com.itgowo.baseServer.base.Dispatcher;
+import com.itgowo.baseServer.utils.Utils;
 
 public class DemoMain {
     private static HttpServerManager mHttpServer = new HttpServerManager();
@@ -21,8 +22,9 @@ public class DemoMain {
         dispatcher.setValidTimeDifference(BaseConfig.getServerIsValidTimeDifference());
         dispatcher.setServerClientTimeDifference(BaseConfig.getServerActionTimeDifference());
         dispatcher.setValidParameter(BaseConfig.getServerIsValidParameter());
-        dispatcher.startWatchAction();
-        dispatcher.actionScanner(Test.class);
+        if (BaseConfig.isAnalysisTps())dispatcher.startAnalysisTps();
+//        dispatcher.startWatchAction();
+        dispatcher.actionScanner(DemoMain.class);
         dispatcher.setDispatcherListener(new DemoDispatcher());
         mHttpServer.setOnReceiveHandleListener(dispatcher);
 

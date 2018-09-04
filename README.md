@@ -249,8 +249,8 @@ Web：http://itgowo.com
         }
 
         @Override
-        public <T> T getData(Class<T> aClass) {
-            return JSON.parseObject(data, aClass);
+        public <T> T getData(Class<T> classObject) {
+            return JSON.parseObject(data, classObject);
         }
 
         @Override

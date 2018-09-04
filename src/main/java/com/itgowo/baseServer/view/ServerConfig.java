@@ -84,11 +84,18 @@ public class ServerConfig {
                 }
             }
         });
+
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
                 super.windowClosed(e);
                 isShow = false;
+                if (scheduledFuture != null && !scheduledFuture.isCancelled()) {
+                    scheduledFuture.cancel(true);
+                }
+                if (!ServerManager.getHttpServerManager().isRunning()) {
+                    System.exit(0);
+                }
             }
         });
         if (ServerManager.getHttpServerManager().isRunning()) {
@@ -99,7 +106,7 @@ public class ServerConfig {
     }
 
     public static void main(String[] args) {
-        showServerWindow(true);
+        showServerWindow();
     }
 
     private void startMonitor() {
@@ -120,13 +127,13 @@ public class ServerConfig {
         }, 1, 3, TimeUnit.SECONDS);
     }
 
-    public static void showServerWindow(boolean EXIT_ON_CLOSE) {
+    public static void showServerWindow() {
         if (isShow) {
             return;
         }
         JFrame frame = new JFrame("服务管理  By 卢建超");
         frame.setContentPane(new ServerConfig(frame).rootPanel);
-        frame.setDefaultCloseOperation(EXIT_ON_CLOSE ? JFrame.EXIT_ON_CLOSE : WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 //        frame.pack();
         frame.setSize(800, 400);
         frame.setLocationRelativeTo(null);
