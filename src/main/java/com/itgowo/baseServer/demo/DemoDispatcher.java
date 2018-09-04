@@ -12,11 +12,6 @@ public class DemoDispatcher implements Dispatcher.onDispatcherListener<DemoClien
     }
 
     @Override
-    public void doRequestOtherMethod(HttpServerHandler handler, ActionRequest actionRequest) {
-
-    }
-
-    @Override
     public boolean interrupt(HttpServerHandler handler) {
         return false;
     }
