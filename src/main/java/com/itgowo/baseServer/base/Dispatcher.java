@@ -347,7 +347,12 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
                 }
                 return;
             }
-            if (handler.getHttpRequest().method() != HttpMethod.POST) {
+            HttpMethod method = handler.getHttpRequest().method();
+            if (method == HttpMethod.POST) {
+                doPost(handler);
+            } else if (method == HttpMethod.GET||method==HttpMethod.DELETE||method==HttpMethod.PUT) {
+                doGET(handler);
+            } else {
                 if (dispatcherListener != null) {
                     dispatcherListener.doRequestOtherMethod(handler, actionTasks.get(handler.getHttpRequest().method().name()));
                 }
@@ -361,6 +366,35 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
             }
             return;
         }
+    }
+
+    private void doGET(HttpServerHandler handler) {
+        while (isHotLoading.get()) {
+            try {
+                this.wait(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        String path=handler.getPath();
+        ActionRequest actionRequest = actionTasks.get(path);
+        try {
+            if (actionRequest == null) {
+                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
+                return;
+            }
+            actionRequest.doAction(handler, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("业务处理异常").setError(e.getMessage()), true);
+            } catch (UnsupportedEncodingException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
+    private void doPost(HttpServerHandler handler) {
         BaseRequest baseRequest = null;
         if (dispatcherListener != null) {
             try {
@@ -476,7 +510,7 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
 
         /**
          * 其他请求，例如GET请求可以像Spring框架一样单独处理参数并匹配（单独实现，不自动实现RESTful风格）
-         * 需要提前设置action为GET（PUT、DELETE）等处理类，会自动将非POST请求分发到对应类型的处理类。
+         * 需要提前设置action为GET（PUT、DELETE）等处理类，会自动将POST/GET/PUT/DELETE请求分发到对应类型的处理类。
          *
          * @param handler
          * @param actionRequest 没找到为null

@@ -1,5 +1,5 @@
 group 'itgowo.com'
-version '0.0.31'
+version '0.0.32'
 
 apply plugin: 'java'
 apply plugin: 'com.novoda.bintray-release'//添加
@@ -28,7 +28,7 @@ publish {
     userOrg = 'itgowo'
     groupId = 'com.itgowo'
     artifactId = 'BaseServer'
-    publishVersion = '0.0.31'
+    publishVersion = '0.0.32'
     desc = 'A service framework for Java language'
     website = 'https://github.com/itgowo/BaseServer'
 }
