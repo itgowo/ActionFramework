@@ -99,6 +99,17 @@ Web：http://itgowo.com
             return false;
         }
 
+         @Override
+        public boolean onNotFoundAction(HttpServerHandler handler, String action) throws Exception {
+            if (handler.getPath()!=null&&handler.getPath().startsWith("GameSTZB")){
+                String html1 = readToString("config/html_index");
+                handler.sendData(html1, false);
+            }else {
+                handler.sendData(HttpResponseStatus.NOT_FOUND,"not found Action",false);
+            }
+            return true;
+        }
+        
         @Override
         public BaseRequest parseJson(String s) throws Exception {
             return JSON.parseObject(s,ClientRequest.class);
@@ -352,3 +363,9 @@ Web：http://itgowo.com
             ServerManager.onError(e);
         }
     }
+
+## 附上一个项目的阿里云压测（双核4gb，高效云盘，压测时内存不高于500MB）
+mysql、redis、gogs和其他服务都部署在同一服务器上。
+三个接口只有读数据库操作处理了业务逻辑，只做参考，redis不给力，包含数据库写入和缓存的测试去掉了
+测试结果是cpu满载，内存用的不多，之前有数据库写入测试TPS达到500了，没写入操作最高670.
+![压测](https://github.com/itgowo/BaseServer/blob/master/image/test.png)

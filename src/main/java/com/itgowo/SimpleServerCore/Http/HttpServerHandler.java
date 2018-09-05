@@ -89,7 +89,15 @@ public class HttpServerHandler {
     }
 
     public void sendData(Object data, boolean isJsonString) throws UnsupportedEncodingException {
-        sendResponse(data, isJsonString);
+        sendResponse(HttpResponseStatus.OK, data, isJsonString);
+    }
+
+    public void sendData(int status, Object data, boolean isJsonString) throws UnsupportedEncodingException {
+        sendResponse(HttpResponseStatus.valueOf(status), data, isJsonString);
+    }
+
+    public void sendData(HttpResponseStatus status, Object data, boolean isJsonString) throws UnsupportedEncodingException {
+        sendResponse(status, data, isJsonString);
     }
 
     /**
@@ -106,12 +114,12 @@ public class HttpServerHandler {
     /**
      * 返回结果
      */
-    private void sendResponse(Object entity, boolean isJsonString) throws UnsupportedEncodingException {
+    private void sendResponse(HttpResponseStatus status, Object entity, boolean isJsonString) throws UnsupportedEncodingException {
         FullHttpResponse response = null;
         if (entity instanceof String) {
-            response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(((String) entity).getBytes("UTF-8")));
+            response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer(((String) entity).getBytes("UTF-8")));
         } else {
-            response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer((entity.toString()).getBytes("UTF-8")));
+            response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, Unpooled.wrappedBuffer((entity.toString()).getBytes("UTF-8")));
         }
         addResponseHeaders(response, isJsonString);
         ctx.writeAndFlush(response);

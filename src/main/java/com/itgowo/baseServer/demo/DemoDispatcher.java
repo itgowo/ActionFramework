@@ -17,6 +17,13 @@ public class DemoDispatcher implements Dispatcher.onDispatcherListener<DemoClien
     }
 
     @Override
+    public boolean onNotFoundAction(HttpServerHandler handler, String action) throws Exception {
+        handler.sendData("404,not found action",false);
+        return true;
+    }
+
+
+    @Override
     public DemoClientRequest parseJson(String string) throws Exception {
         return JSON.parseObject(string, DemoClientRequest.class);
     }

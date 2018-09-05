@@ -375,7 +375,9 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
         ActionRequest actionRequest = actionTasks.get(path);
         try {
             if (actionRequest == null) {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
+                if (!dispatcherListener.onNotFoundAction(handler, path)) {
+                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
+                }
                 return;
             }
             actionRequest.doAction(handler, null);
@@ -440,7 +442,9 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
         ActionRequest actionRequest = actionTasks.get(baseRequest.getAction());
         try {
             if (actionRequest == null) {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
+                if (!dispatcherListener.onNotFoundAction(handler, baseRequest.getAction())) {
+                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
+                }
                 return;
             }
             actionRequest.doAction(handler, baseRequest);
@@ -511,6 +515,15 @@ public class Dispatcher implements HttpServerHandler.onReceiveHandlerListener, W
          * @return
          */
         public boolean interrupt(HttpServerHandler handler);
+
+        /**
+         * 是否被处理，默认处理返回false
+         *
+         * @param handler
+         * @param action
+         * @return
+         */
+        boolean onNotFoundAction(HttpServerHandler handler, String action) throws Exception;
 
         /**
          * 定义Json解析器
