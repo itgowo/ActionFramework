@@ -1,8 +1,8 @@
 package com.itgowo.servercore.http;
 
-import com.itgowo.actionserver.ServerManager;
+import com.itgowo.actionframework.ServerManager;
 import com.itgowo.servercore.onServerListener;
-import com.itgowo.actionserver.base.Dispatcher;
+import com.itgowo.actionframework.base.Dispatcher;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
