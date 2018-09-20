@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.itgowo.baseserver.view.ConfigWindow">
+  <grid id="27dc6" binding="rootPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+    <constraints>
+      <xy x="20" y="20" width="500" height="400"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <grid id="b5f0a" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+        <constraints border-constraint="North"/>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="5fb0f" class="javax.swing.JButton" binding="readButton">
+            <constraints/>
+            <properties>
+              <text value="读配置"/>
+            </properties>
+          </component>
+          <component id="3bfa0" class="javax.swing.JButton" binding="writeButton">
+            <constraints/>
+            <properties>
+              <text value="写配置"/>
+            </properties>
+          </component>
+        </children>
+      </grid>
+      <grid id="2b96" binding="rootList" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="0">
+        <constraints border-constraint="Center"/>
+        <properties/>
+        <border type="line" title="配置信息"/>
+        <children>
+          <scrollpane id="91f8b">
+            <constraints/>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <grid id="ad14b" binding="list" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                <constraints/>
+                <properties/>
+                <border type="none"/>
+                <children/>
+              </grid>
+            </children>
+          </scrollpane>
+        </children>
+      </grid>
+    </children>
+  </grid>
+</form>

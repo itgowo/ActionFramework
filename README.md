@@ -28,7 +28,7 @@ Web：http://itgowo.com
     ServerRedisAuth=test123 //redis暂时未集成
     ServerRedisUrl=localhost //redis地址
     ServerMySQLUser=test //数据库未集成
-    ServerActionPackage=com.itgowo.baseServer.action;com.itgowo.baseServer.demo;com.game //设置Action接口包名，过滤，支持数组
+    ServerActionPackage=com.itgowo.baseserver.action;com.itgowo.baseserver.demo;com.game //设置Action接口包名，过滤，支持数组
     ServerNettyWorkerThreadNum=6 //netty WorkerThread线程数
     ServerDynamicActionDir=/Users/lujianchao/111/action //设置动态加载替换接口目录
     ServerIsValidParameter=true //是否校验参数
@@ -39,7 +39,7 @@ Web：http://itgowo.com
     ServerMySQLUrl=jdbc\:mysql\://localhost\:3306/test?characterEncoding\=utf-8&amp&useSSL\=false ////数据库未集成
     ServerIsValidSign=false //是否校验签名
     ServerAnalysisTps=false //是否开启tps统计，Dispatcher.tps获取静态变量，float类型，每隔5秒计算一次
-    ServerMainClass=com.itgowo.baseServer.demo.DemoMainClassForWindow    //设置服务器配置启动类，使用界面控制必须实现，代码控制不要求，最好使用ServerManager.getHttpServerManager获取单例，这样打开页面也可以对服务控制
+    ServerMainClass=com.itgowo.baseserver.demo.DemoMainClassForWindow    //设置服务器配置启动类，使用界面控制必须实现，代码控制不要求，最好使用ServerManager.getHttpServerManager获取单例，这样打开页面也可以对服务控制
     ServerShowServerWindow=true
 
 ## 服务控制界面

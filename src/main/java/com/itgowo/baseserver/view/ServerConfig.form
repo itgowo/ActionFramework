@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="com.itgowo.baseserver.view.ServerConfig">
+  <grid id="27dc6" binding="rootPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
+    <constraints>
+      <xy x="20" y="20" width="500" height="400"/>
+    </constraints>
+    <properties/>
+    <border type="line"/>
+    <children>
+      <grid id="c0e4" layout-manager="BorderLayout" hgap="0" vgap="0">
+        <constraints border-constraint="North"/>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <grid id="921e7" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+            <constraints border-constraint="Center"/>
+            <properties/>
+            <border type="none" title="服务控制"/>
+            <children>
+              <component id="b294c" class="javax.swing.JButton" binding="server_start_stop">
+                <constraints/>
+                <properties>
+                  <text value="启动"/>
+                </properties>
+              </component>
+              <component id="a717e" class="javax.swing.JButton" binding="server_gc_button">
+                <constraints/>
+                <properties>
+                  <text value="垃圾回收"/>
+                </properties>
+              </component>
+              <component id="40c40" class="javax.swing.JButton" binding="server_config_btn">
+                <constraints/>
+                <properties>
+                  <text value="服务配置"/>
+                </properties>
+              </component>
+              <component id="bcf8b" class="javax.swing.JButton" binding="server_show_log">
+                <constraints/>
+                <properties>
+                  <enabled value="false"/>
+                  <text value="Log"/>
+                </properties>
+              </component>
+              <component id="e37c1" class="javax.swing.JCheckBox" binding="server_monitor_swich">
+                <constraints/>
+                <properties>
+                  <selected value="false"/>
+                  <text value="监控"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+        </children>
+      </grid>
+      <scrollpane id="8a002" binding="server_thread_layout">
+        <constraints border-constraint="Center"/>
+        <properties/>
+        <border type="etched" title="线程信息" title-justification="2"/>
+        <children/>
+      </scrollpane>
+      <grid id="d6376" binding="server_info_rootLayout" layout-manager="GridBagLayout">
+        <constraints border-constraint="West"/>
+        <properties/>
+        <border type="etched" title="服务器状态" title-justification="1" title-position="2"/>
+        <children/>
+      </grid>
+    </children>
+  </grid>
+</form>
