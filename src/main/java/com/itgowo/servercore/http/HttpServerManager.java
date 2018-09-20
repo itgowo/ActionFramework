@@ -1,10 +1,8 @@
 package com.itgowo.servercore.http;
 
-import com.itgowo.baseserver.ServerManager;
+import com.itgowo.actionserver.ServerManager;
 import com.itgowo.servercore.onServerListener;
-import com.itgowo.servercore.socket.SocketServerManager;
-import com.itgowo.servercore.utils.LogU;
-import com.itgowo.baseserver.base.Dispatcher;
+import com.itgowo.actionserver.base.Dispatcher;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -16,9 +14,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.util.concurrent.DefaultThreadFactory;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Created by lujianchao on 2017/5/25.

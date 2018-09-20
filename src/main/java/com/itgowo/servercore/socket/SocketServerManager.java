@@ -1,6 +1,6 @@
 package com.itgowo.servercore.socket;
 
-import com.itgowo.baseserver.ServerManager;
+import com.itgowo.actionserver.ServerManager;
 import com.itgowo.servercore.onServerListener;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;

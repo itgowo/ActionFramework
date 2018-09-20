@@ -1,7 +1,7 @@
 package com.itgowo.servercore.websocket;
 
-import com.itgowo.baseserver.ServerManager;
-import com.itgowo.baseserver.base.Dispatcher;
+import com.itgowo.actionserver.ServerManager;
+import com.itgowo.actionserver.base.Dispatcher;
 import com.itgowo.servercore.onServerListener;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;

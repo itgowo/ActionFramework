@@ -37,8 +37,7 @@
 
 package com.itgowo.servercore.websocket.client;
 
-import com.itgowo.baseserver.ServerManager;
-import io.netty.buffer.Unpooled;
+import com.itgowo.actionserver.ServerManager;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.*;
