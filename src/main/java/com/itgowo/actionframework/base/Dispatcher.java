@@ -171,7 +171,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
         }
         Class c = classEntry.getClassObject();
         try {
-            if (c == null || Modifier.isInterface(c.getModifiers()) || Modifier.isAbstract(c.getModifiers())||c.isEnum()) {
+            if (c == null || Modifier.isInterface(c.getModifiers()) || Modifier.isAbstract(c.getModifiers()) || c.isEnum()) {
                 return;
             }
 
@@ -318,7 +318,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
     public void onReceiveHandler(HttpServerHandler handler) {
         if (handler != null) {
             onDispatch(handler);
-            tpsCount.addAndGet(1);
+            if (scheduledFuture != null) tpsCount.addAndGet(1);
         }
     }
 
