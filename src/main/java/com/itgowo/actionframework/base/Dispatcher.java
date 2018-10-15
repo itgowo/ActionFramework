@@ -124,12 +124,14 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
                 dispatcherListener.onDispatcherError(new Throwable("ServerActionPackage配置不正确，配置格式例如com.game.stzb.action或者com/game/stzb/action,允许继续运行"));
             }
         }
+        setLoadActionStatus(true);
         stringBuilder = new StringBuilder("\r\n找到如下Action处理器：\r\n");
         checkAndRegister(loadClass(file, packagePaths));
         stringBuilder.append("-----------------\r\n");
         ServerManager.getLogger().info(stringBuilder.toString());
         stringBuilder.setLength(0);
         stringBuilder = null;
+        setLoadActionStatus(false);
     }
 
     private List<ClassEntry> loadClass(File file, List<String> packagePath) {

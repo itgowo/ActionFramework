@@ -22,12 +22,16 @@ public class HttpServerManager {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ServerBootstrap serverBootstrap;
-    private onServerListener onServerListener;
+    private Dispatcher onServerListener;
     private boolean isRunning = false;
     private String serverName = "HttpServer";
 
     public boolean isRunning() {
         return isRunning;
+    }
+
+    public Dispatcher getOnServerListener() {
+        return onServerListener;
     }
 
     public HttpServerManager setServerName(String serverName) {
@@ -39,7 +43,7 @@ public class HttpServerManager {
      *
      * @param onServerListener
      */
-    public HttpServerManager setOnServerListener(onServerListener onServerListener) {
+    public HttpServerManager setOnServerListener(Dispatcher onServerListener) {
         this.onServerListener = onServerListener;
         return this;
     }

@@ -38,7 +38,7 @@ public class ServerManager {
     public static Logger getLogger() {
         if (log == null) {
             synchronized (ServerManager.class) {
-                log = LogU.getLogU("com.itgowo.server.WebSocketServerManager", Level.ALL);
+                log = LogU.getLogU("com.itgowo.server.ServerManager", Level.ALL);
             }
         }
         return log;
