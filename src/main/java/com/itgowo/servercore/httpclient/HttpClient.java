@@ -26,14 +26,14 @@ public class HttpClient {
     }
 
     public static void RequestGet(String url, String requestJson, onCallbackListener listener) {
-        Request(url, Method.GET, requestJson, true, listener);
+        Request(url, Method.GET, requestJson, listener);
     }
 
     public static void RequestPOST(String url, String requestJson, onCallbackListener listener) {
-        Request(url, Method.POST, requestJson, true, listener);
+        Request(url, Method.POST, requestJson, listener);
     }
 
-    public static void Request(String url, Method method, String requestJson, boolean callbackOnMainThread, onCallbackListener listener) {
+    public static void Request(String url, Method method, String requestJson, onCallbackListener listener) {
         executorService.execute(new RequestClient(url, method.getMethod(), requestJson, timeout, listener));
     }
 

@@ -22,7 +22,7 @@ public class HttpServerManager {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private ServerBootstrap serverBootstrap;
-    private Dispatcher onServerListener;
+    private onServerListener onServerListener;
     private boolean isRunning = false;
     private String serverName = "HttpServer";
 
@@ -30,7 +30,7 @@ public class HttpServerManager {
         return isRunning;
     }
 
-    public Dispatcher getOnServerListener() {
+    public onServerListener getOnServerListener() {
         return onServerListener;
     }
 
@@ -43,7 +43,7 @@ public class HttpServerManager {
      *
      * @param onServerListener
      */
-    public HttpServerManager setOnServerListener(Dispatcher onServerListener) {
+    public HttpServerManager setOnServerListener(onServerListener onServerListener) {
         this.onServerListener = onServerListener;
         return this;
     }
