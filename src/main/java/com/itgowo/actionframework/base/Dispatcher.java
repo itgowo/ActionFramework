@@ -262,7 +262,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
 
         actionHashMap.put(action, actionRequest);
         actionPath.put(filePath, action);
-        stringBuilder.append("Method:" + method + "  Action:" + action + " \t Class:" + actionRequest.getClass().getName() + "\r\n");
+        stringBuilder.append("HttpMethod:" + method + "  Action:" + action + " \t Class:" + actionRequest.getClass().getName() + "\r\n");
         return this;
     }
 

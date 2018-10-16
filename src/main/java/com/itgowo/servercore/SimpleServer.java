@@ -9,6 +9,8 @@ import com.itgowo.servercore.websocket.WebSocketServerManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 public class SimpleServer {
@@ -27,8 +29,15 @@ public class SimpleServer {
             }
 
             @Override
-            public void onReceiveHandler(HttpServerHandler handler) {
+            public void onReceiveHandler(HttpServerHandler handler)throws Exception {
                 System.out.println(handler);
+//                handler.sendRedirect("http://baidu.com");
+//                String path=handler.getPath();
+//                if (path.equalsIgnoreCase("")){
+//                    path="index.html";
+//                }
+//                handler.sendFile(new File("/Users/lujianchao/GitDemo/RemoteDataController/RemoteDataControllerServer/web/"+path));
+
                 try {
                     handler.sendData("我收到了", false);
                 } catch (UnsupportedEncodingException e) {

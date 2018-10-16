@@ -1,7 +1,7 @@
 package com.itgowo.servercore;
 
 import com.itgowo.servercore.httpclient.HttpClient;
-import com.itgowo.servercore.httpclient.Method;
+import com.itgowo.servercore.httpclient.HttpMethod;
 import com.itgowo.servercore.httpclient.Response;
 import com.itgowo.servercore.httpclient.onCallbackListener;
 
@@ -20,29 +20,28 @@ public class Test {
 //                    throwable.printStackTrace();
 //                }
 //            });
-            SimpleServer.testSocketServer();
+            SimpleServer.testHttpServer();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
-        try {
-            Response response= HttpClient.RequestSync("localhost:16671",Method.POST,"asdfljasldf");
-            System.out.println(response.getBodaStr());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        HttpClient.RequestPOST("localhost:16671", "abacvasdfasewrjowriuwo", new onCallbackListener() {
-            @Override
-            public void onError(Response response, Exception e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onSuccess(Response response) {
-                System.out.println(response.getBodaStr());
-            }
-        });
+//        try {
+//            Response response= HttpClient.RequestSync("localhost:16671",HttpMethod.POST,"asdfljasldf");
+//            System.out.println(response.getBodaStr());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        HttpClient.RequestPOST("localhost:16671", "abacvasdfasewrjowriuwo", new onCallbackListener() {
+//            @Override
+//            public void onError(Response response, Exception e) {
+//                e.printStackTrace();
+//            }
+//
+//            @Override
+//            public void onSuccess(Response response) {
+//                System.out.println(response.getBodaStr());
+//            }
+//        });
     }
 }
