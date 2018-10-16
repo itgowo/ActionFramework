@@ -28,7 +28,7 @@ publish {
     userOrg = 'itgowo'
     groupId = 'com.itgowo'
     artifactId = 'ActionFramework'
-    publishVersion = '0.0.44'
+    publishVersion = '0.0.46'
     desc = 'A framework that supports the http, socket, and websocket protocols, and includes a set of frameworks that implement actions'
     website = 'https://github.com/itgowo/ActionFramework'
 }

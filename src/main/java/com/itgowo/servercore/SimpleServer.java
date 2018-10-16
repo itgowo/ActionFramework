@@ -32,17 +32,17 @@ public class SimpleServer {
             public void onReceiveHandler(HttpServerHandler handler)throws Exception {
                 System.out.println(handler);
 //                handler.sendRedirect("http://baidu.com");
-//                String path=handler.getPath();
+                String path=handler.getPath();
 //                if (path.equalsIgnoreCase("")){
 //                    path="index.html";
 //                }
-//                handler.sendFile(new File("/Users/lujianchao/GitDemo/RemoteDataController/RemoteDataControllerServer/web/"+path));
+                handler.sendFile(new File("/Users/lujianchao/GitDemo/RemoteDataController/RemoteDataControllerServer/web/"+path),true);
 
-                try {
-                    handler.sendData("我收到了", false);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    handler.sendData("我收到了", false);
+//                } catch (UnsupportedEncodingException e) {
+//                    e.printStackTrace();
+//                }
             }
 
             @Override

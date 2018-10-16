@@ -48,7 +48,7 @@ public class HttpMethod {
     }
 
     public boolean equalsIgnoreCase(String method) {
-        return method.equalsIgnoreCase(method);
+        return this.method.equalsIgnoreCase(method);
     }
 
     public String getMethod() {
