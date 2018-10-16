@@ -10,6 +10,7 @@ import io.netty.handler.stream.ChunkedFile;
 import javax.activation.MimetypesFileTypeMap;
 import java.io.*;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +24,7 @@ public class HttpServerHandler implements ServerHandler {
     private byte[] body;
     private String path;
     private String uri;
-    private Map<String, String> parameters;
+    private Map<String, String> parameters=new HashMap<>();
     private HttpHeaders responseHeader = new DefaultHttpHeaders();
 
     public void addHeaderToResponse(String key, String value) {
