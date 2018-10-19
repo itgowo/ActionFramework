@@ -67,7 +67,6 @@ public class SocketServerManager {
                         public void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new ByteArrayEncoder());
                             ch.pipeline().addLast(new ByteArrayDecoder());
-                            ch.pipeline().addLast(new PackageEncoder());
                             ch.pipeline().addLast(new SocketServerInboundHandlerAdapter(onServerListener));
                         }
                     }).option(ChannelOption.SO_BACKLOG, 4096)

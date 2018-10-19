@@ -1,8 +1,10 @@
 package com.itgowo.servercore;
 
 import com.itgowo.socketframework.PackageMessage;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
-import java.util.Arrays;
+import java.nio.ByteBuffer;
 
 public class Test {
     public static void main(String[] args) {
@@ -45,23 +47,22 @@ public class Test {
 //            }
 //        });
 
-        int result = PackageMessage.dataSign(new byte[]{33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56});
-        System.out.println(Arrays.toString(PackageMessage.intToByteArray(result)));
+        byte[] bytes = new byte[]{33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56};
+        ByteBuf byteBuf = Unpooled.buffer(40);
+        byteBuf.writeBytes(bytes);
+        PackageMessage packageMessage=PackageMessage.getPackageMessage();
+        packageMessage.setType(PackageMessage.TYPE_DYNAMIC_LENGTH).setDataType(PackageMessage.DATA_TYPE_BYTE).setData(byteBuf);
+       ByteBuf byteBuf1= packageMessage.encodePackageMessage();
+        System.out.println("dddd");
+
+
+
+        byte[] test1=new byte[]{121
+                ,0,0,0,24,
+                3,3,44,10,
+                23,
+                33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56};
+         PackageMessage.packageMessage(Unpooled.wrappedBuffer(test1));
     }
 
-    public static int byteArrayToInt(byte[] b) {
-        if (b == null) {
-            return 0;
-        }
-        if (b.length == 3) {
-            return (b[2] & 0xFF) | (b[1] & 0xFF) << 8 | (b[0] & 0xFF) << 16;
-        }
-        if (b.length == 2) {
-            return (b[1] & 0xFF) | (b[0] & 0xFF) << 8;
-        }
-        if (b.length == 1) {
-            return b[0] & 0xFF;
-        }
-        return b[3] & 0xFF | (b[2] & 0xFF) << 8 | (b[1] & 0xFF) << 16 | (b[0] & 0xFF) << 24;
-    }
 }

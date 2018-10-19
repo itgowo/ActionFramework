@@ -1,11 +1,9 @@
 package com.itgowo.socketframework;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.Unpooled;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +38,7 @@ public class PackageMessage {
     /**
      * 数据包类型为定长类型，数据长度固定
      */
-    public static final int TYPE_FIX_LENGTH = 220;
+    public static final int TYPE_FIX_LENGTH = 120;
     /**
      * 数据包类型为动态长度类型，数据长度不固定
      */
@@ -67,6 +65,10 @@ public class PackageMessage {
      */
     public static final int DATA_TYPE_JSON = 5;
     /**
+     * 标准格式协议头大小
+     */
+    public static final int LENGTH_HEAD = 10;
+    /**
      * 处理黏包分包
      */
     private static PackageMessage pack;
@@ -75,17 +77,13 @@ public class PackageMessage {
      */
     private static ByteBuf nextData = Unpooled.buffer();
     /**
-     * type 1 byte 消息类型  系统协议
+     * type 1 byte 消息类型  系统协议  范围-127 ~ 128
      */
-    private int type = 0;
+    private int type = TYPE_DYNAMIC_LENGTH;
     /**
      * length 4 byte 消息包总长度
      */
     private int length = 0;
-    /**
-     * 用于指示读取长度,相对于data数据
-     */
-    private int position = 0;
     /**
      * 数据类型，0-10 是预定义或保留值。
      */
@@ -97,7 +95,7 @@ public class PackageMessage {
     /**
      * 承载数据
      */
-    private ByteBuffer data;
+    private ByteBuf data;
     /**
      * 当前处理进度，初始小于6byte不进入进度
      * 0   new 出来默认值
@@ -129,15 +127,6 @@ public class PackageMessage {
         return this;
     }
 
-    public int getPosition() {
-        return position;
-    }
-
-    public PackageMessage setPosition(int position) {
-        this.position = position;
-        return this;
-    }
-
     public int getDataType() {
         return dataType;
     }
@@ -156,16 +145,59 @@ public class PackageMessage {
         return this;
     }
 
-    public ByteBuffer getData() {
+    public ByteBuf getData() {
         return data;
     }
 
-    public PackageMessage setData(ByteBuffer data) {
+    public byte[] getDataBytes() {
+        byte[] bytes = new byte[data.readableBytes()];
+        data.getBytes(0, bytes);
+        return bytes;
+    }
+
+    public PackageMessage setData(ByteBuf data) {
         this.data = data;
+        data.readerIndex(0);
+        length = data.readableBytes() + LENGTH_HEAD;
+        dataSign = dataSign();
+        return this;
+    }
+
+    public PackageMessage setData(byte[] data) {
+        ByteBuf byteBuf = Unpooled.buffer();
+        byteBuf.writeBytes(data);
+        setData(byteBuf);
         return this;
     }
 
     private PackageMessage() {
+    }
+
+    public static PackageMessage getPackageMessage() {
+        return new PackageMessage();
+    }
+
+    public ByteBuf encodePackageMessage() {
+        if (type != TYPE_FIX_LENGTH && type != TYPE_DYNAMIC_LENGTH) {
+            return null;
+        }
+        if (length <= 6) {
+            return null;
+        }
+        if (dataType == 0) {
+            return null;
+        }
+
+        if (data.readerIndex(0).readableBytes() != length - LENGTH_HEAD) {
+            return null;
+        }
+        ByteBuf byteBuf = Unpooled.buffer();
+        byteBuf.writeByte(type)
+                .writeInt(length)
+                .writeByte(dataType)
+                .writeInt(dataSign)
+                .writeBytes(data);
+        return byteBuf;
     }
 
     public static List<PackageMessage> packageMessage(ByteBuf byteBuf) {
@@ -185,53 +217,48 @@ public class PackageMessage {
         return messageList;
     }
 
-    private static PackageMessage decodeFixLengthPackageMessage(ByteBufInputStream inputStream) throws IOException {
+    private static PackageMessage decodeFixLengthPackageMessage(ByteBuf inputStream) throws IOException {
         return null;
     }
 
-    private static PackageMessage decodeDynamicLengthPackageMessage(ByteBufInputStream inputStream) throws IOException {
+    private static PackageMessage decodeDynamicLengthPackageMessage(ByteBuf byteBuf) throws IOException {
         if (pack.step == STEP_TYPE) {
-            pack.setLength(inputStream.readInt());
+            pack.setLength(byteBuf.readInt());
             pack.step = STEP_LENGTH;
         }
         if (pack.step == STEP_LENGTH) {
-            pack.setDataType(inputStream.readByte());
+            pack.setDataType(byteBuf.readByte());
             pack.step = STEP_DATA_TYPE;
         }
         if (pack.step == STEP_DATA_TYPE) {
             if (pack.getLength() < 6) {
                 pack.step = STEP_DATA_INVALID;
-                return null;
+                return pack;
             }
             if (pack.getLength() == 6) {
                 pack.step = STEP_DATA_COMPLETEED;
                 return pack;
             }
             //pack.getLength>6情况
-            if (inputStream.available() < 4) {
+            if (byteBuf.readableBytes() < 4) {
                 //可能存在数据读取一半情况，直接返回，返回后由上游处理器暂存输入流剩余数据，下次合并输入流。
                 return pack;
             }
-            pack.dataSign = inputStream.readInt();
+            pack.dataSign = byteBuf.readInt();
             pack.step = STEP_DATA_SIGN;
         }
         if (pack.step == STEP_DATA_SIGN) {
-            ByteBuffer byteBuffer = ByteBuffer.allocate(pack.getLength() - 10);
-            pack.setData(byteBuffer);
+            pack.data = Unpooled.buffer();
             //数据包大小在已有数据范围内，即要执行拆包操作
-            if (byteBuffer.capacity() <= inputStream.available()) {
-                byte[] bytes = new byte[byteBuffer.capacity()];
-                inputStream.read(bytes);
-                byteBuffer.put(bytes);
-                byteBuffer.flip();
+            int dataLength = pack.getLength() - LENGTH_HEAD;
+            if (dataLength <= byteBuf.readableBytes()) {
+                pack.data.writeBytes(byteBuf,dataLength);
                 pack.step = STEP_DATA_COMPLETEED;
                 return pack;
             } else {
                 //处理半包结果，即保存部分数据
-                if (inputStream.available() > 0) {
-                    byte[] bytes = new byte[inputStream.available()];
-                    inputStream.read(bytes);
-                    byteBuffer.put(bytes);
+                if (byteBuf.readableBytes() > 0) {
+                    pack.getData().writeBytes(byteBuf, byteBuf.readableBytes());
                 }
                 pack.step = STEP_DATA_PART;
                 return pack;
@@ -239,24 +266,29 @@ public class PackageMessage {
         }
         //半包处理
         if (pack.step == STEP_DATA_PART) {
-            int partLength = pack.getData().capacity() - pack.getData().position();
-            if (partLength <= inputStream.available()) {
-                byte[] bytes = new byte[partLength];
-                inputStream.read(bytes);
-                ByteBuffer byteBuffer = pack.getData();
-                byteBuffer.put(bytes);
-                byteBuffer.flip();
+            int partLength = pack.getLength() - LENGTH_HEAD - pack.data.readableBytes();
+            if (partLength <= byteBuf.readableBytes()) {
+                pack.data.writeBytes(byteBuf, partLength);
                 pack.step = STEP_DATA_COMPLETEED;
             } else {
-                if (inputStream.available() > 0) {
-                    byte[] bytes = new byte[inputStream.available()];
-                    inputStream.read(bytes);
-                    ByteBuffer byteBuffer = pack.getData();
-                    byteBuffer.put(bytes);
+                if (byteBuf.readableBytes() > 0) {
+                    pack.data.writeBytes(byteBuf, byteBuf.readableBytes());
                 }
             }
         }
         return pack;
+    }
+
+    /**
+     * 获取data长度，如果没有data，则返回0，返回结果只作为正常数据参考,不一定是data真实长度
+     *
+     * @return
+     */
+    public int getDataLength() {
+        if (length <= 6 || data == null) {
+            return 0;
+        }
+        return length - LENGTH_HEAD;
     }
 
     private static synchronized PackageMessage decodePackageMessage(ByteBuf byteBuf) throws IOException {
@@ -265,8 +297,8 @@ public class PackageMessage {
             return null;
         }
         //nextData大于6，则正常处理
-        ByteBufInputStream inputStream = new ByteBufInputStream(nextData);
-        int type = inputStream.readByte();
+
+        int type = nextData.readByte();
         if (TYPE_FIX_LENGTH == type || TYPE_DYNAMIC_LENGTH == type) {
             if (pack == null) {
                 pack = new PackageMessage();
@@ -278,10 +310,11 @@ public class PackageMessage {
         }
         PackageMessage packageMessage = null;
         if (pack.getType() == TYPE_FIX_LENGTH) {
-            packageMessage = decodeFixLengthPackageMessage(inputStream);
+            packageMessage = decodeFixLengthPackageMessage(nextData);
         } else if (pack.getType() == TYPE_DYNAMIC_LENGTH) {
-            return decodeDynamicLengthPackageMessage(inputStream);
+            packageMessage = decodeDynamicLengthPackageMessage(nextData);
         }
+        byteBuf.discardReadBytes();
         return packageMessage;
     }
 
@@ -327,25 +360,31 @@ public class PackageMessage {
     }
 
     /**
-     * 获取简单数据签名
+     * 获取简单数据签名，注意先初始化length
      *
-     * @param bytes
      * @return
      */
-    public static int dataSign(byte[] bytes) {
+    public int dataSign() {
         byte[] bytes1 = new byte[4];
-        if (bytes == null) {
+        if (data == null) {
             return 0;
         }
-        if (bytes.length < 10) {
+        if (length < 10) {
             return 1;
         }
-        int position = bytes.length / 4;
+        data.readerIndex(0);
+        if (data.readableBytes() < 10) {
+            return 1;
+        }
+        int length = data.readableBytes();
+        int position = length / 4;
         bytes1[0] = (byte) position;
-        bytes1[1] = bytes[position];
-        position = bytes.length * 3 / 4;
+        data.readerIndex(position);
+        bytes1[1] = data.readByte();
+        position = length * 3 / 4;
         bytes1[2] = (byte) position;
-        bytes1[3] = bytes[position];
+        data.readerIndex(position);
+        bytes1[3] = data.readByte();
         return byteArrayToInt(bytes1);
     }
 
