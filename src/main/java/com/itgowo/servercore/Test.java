@@ -1,12 +1,13 @@
 package com.itgowo.servercore;
 
-import com.itgowo.servercore.httpclient.HttpClient;
-import com.itgowo.servercore.httpclient.HttpMethod;
-import com.itgowo.servercore.httpclient.Response;
-import com.itgowo.servercore.httpclient.onCallbackListener;
+import com.itgowo.socketframework.PackageMessage;
+
+import java.util.Arrays;
 
 public class Test {
     public static void main(String[] args) {
+
+
         try {
 //            SimpleServer.testSocketServer();
 //            HttpClient.get("http://stzb.163.com/herolist/100006.html",null, new WebSocketServerHandler.onReceiveHandlerListener() {
@@ -20,7 +21,7 @@ public class Test {
 //                    throwable.printStackTrace();
 //                }
 //            });
-            SimpleServer.testHttpServer();
+//            SimpleServer.testHttpServer();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -43,5 +44,24 @@ public class Test {
 //                System.out.println(response.getBodaStr());
 //            }
 //        });
+
+        int result = PackageMessage.dataSign(new byte[]{33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56});
+        System.out.println(Arrays.toString(PackageMessage.intToByteArray(result)));
+    }
+
+    public static int byteArrayToInt(byte[] b) {
+        if (b == null) {
+            return 0;
+        }
+        if (b.length == 3) {
+            return (b[2] & 0xFF) | (b[1] & 0xFF) << 8 | (b[0] & 0xFF) << 16;
+        }
+        if (b.length == 2) {
+            return (b[1] & 0xFF) | (b[0] & 0xFF) << 8;
+        }
+        if (b.length == 1) {
+            return b[0] & 0xFF;
+        }
+        return b[3] & 0xFF | (b[2] & 0xFF) << 8 | (b[1] & 0xFF) << 16 | (b[0] & 0xFF) << 24;
     }
 }
