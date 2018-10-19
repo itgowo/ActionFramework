@@ -297,7 +297,7 @@ public class PackageMessage {
             return null;
         }
         //nextData大于6，则正常处理
-
+        nextData.readerIndex(0);
         int type = nextData.readByte();
         if (TYPE_FIX_LENGTH == type || TYPE_DYNAMIC_LENGTH == type) {
             if (pack == null) {
@@ -314,7 +314,7 @@ public class PackageMessage {
         } else if (pack.getType() == TYPE_DYNAMIC_LENGTH) {
             packageMessage = decodeDynamicLengthPackageMessage(nextData);
         }
-        byteBuf.discardReadBytes();
+        nextData.discardReadBytes();
         return packageMessage;
     }
 
