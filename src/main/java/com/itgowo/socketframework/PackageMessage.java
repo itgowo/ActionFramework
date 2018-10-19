@@ -222,61 +222,36 @@ public class PackageMessage {
     }
 
     private static PackageMessage decodeDynamicLengthPackageMessage(ByteBuf byteBuf) throws IOException {
-        if (pack.step == STEP_TYPE) {
-            pack.setLength(byteBuf.readInt());
-            pack.step = STEP_LENGTH;
+        pack.setLength(byteBuf.readInt());
+        pack.setDataType(byteBuf.readByte());
+        if (pack.getLength() < 6) {
+            pack.step = STEP_DATA_INVALID;
+            byteBuf.readerIndex(0);
+            return pack;
         }
-        if (pack.step == STEP_LENGTH) {
-            pack.setDataType(byteBuf.readByte());
-            pack.step = STEP_DATA_TYPE;
+        if (pack.getLength() == 6) {
+            pack.step = STEP_DATA_COMPLETEED;
+            return pack;
         }
-        if (pack.step == STEP_DATA_TYPE) {
-            if (pack.getLength() < 6) {
-                pack.step = STEP_DATA_INVALID;
-                return pack;
-            }
-            if (pack.getLength() == 6) {
-                pack.step = STEP_DATA_COMPLETEED;
-                return pack;
-            }
-            //pack.getLength>6情况
-            if (byteBuf.readableBytes() < 4) {
-                //可能存在数据读取一半情况，直接返回，返回后由上游处理器暂存输入流剩余数据，下次合并输入流。
-                return pack;
-            }
-            pack.dataSign = byteBuf.readInt();
-            pack.step = STEP_DATA_SIGN;
+        //pack.getLength>6情况
+        if (byteBuf.readableBytes() < 4) {
+            byteBuf.readerIndex(0);
+            //可能存在数据读取一半情况，直接返回，返回后由上游处理器暂存输入流剩余数据，下次合并输入流。
+            return pack;
         }
-        if (pack.step == STEP_DATA_SIGN) {
-            pack.data = Unpooled.buffer();
-            //数据包大小在已有数据范围内，即要执行拆包操作
-            int dataLength = pack.getLength() - LENGTH_HEAD;
-            if (dataLength <= byteBuf.readableBytes()) {
-                pack.data.writeBytes(byteBuf,dataLength);
-                pack.step = STEP_DATA_COMPLETEED;
-                return pack;
-            } else {
-                //处理半包结果，即保存部分数据
-                if (byteBuf.readableBytes() > 0) {
-                    pack.getData().writeBytes(byteBuf, byteBuf.readableBytes());
-                }
-                pack.step = STEP_DATA_PART;
-                return pack;
-            }
+        pack.dataSign = byteBuf.readInt();
+        pack.data = Unpooled.buffer();
+        //数据包大小在已有数据范围内，即要执行拆包操作
+        int dataLength = pack.getLength() - LENGTH_HEAD;
+        if (dataLength <= byteBuf.readableBytes()) {
+            pack.data.writeBytes(byteBuf, dataLength);
+            pack.step=STEP_DATA_COMPLETEED;
+            return pack;
+        } else {
+            byteBuf.readerIndex(0);
+            pack.step=STEP_DATA_PART;
+            return pack;
         }
-        //半包处理
-        if (pack.step == STEP_DATA_PART) {
-            int partLength = pack.getLength() - LENGTH_HEAD - pack.data.readableBytes();
-            if (partLength <= byteBuf.readableBytes()) {
-                pack.data.writeBytes(byteBuf, partLength);
-                pack.step = STEP_DATA_COMPLETEED;
-            } else {
-                if (byteBuf.readableBytes() > 0) {
-                    pack.data.writeBytes(byteBuf, byteBuf.readableBytes());
-                }
-            }
-        }
-        return pack;
     }
 
     /**

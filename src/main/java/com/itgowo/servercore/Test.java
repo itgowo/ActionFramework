@@ -56,18 +56,16 @@ public class Test {
 //        List<PackageMessage> packageMessage1=PackageMessage.packageMessage(byteBuf1);
 
         byte[] test1 = new byte[]{
-                121
-                , 0, 0, 0, 24,
+                121};
+        List<PackageMessage> packageMessage1= PackageMessage.packageMessage(Unpooled.wrappedBuffer(test1));
+        byte[] test2 = new byte[]{
+                 0, 0, 0, 24,
                 3, 3, 44, 10,
                 23,
                 33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56
 
                 //下面是第二个数据包的数据，模拟黏包拆包操作
-                ,121
-                };
-        List<PackageMessage> packageMessage1= PackageMessage.packageMessage(Unpooled.wrappedBuffer(test1));
-        byte[] test2 = new byte[]{
-//                121,
+                ,121,
                 0, 0, 0, 24,
                 3, 3, 44, 10
                 //模拟半包发送
