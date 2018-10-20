@@ -1,9 +1,10 @@
 package com.itgowo.servercore;
 
+import com.itgowo.servercore.socket.ByteBuffer;
 import com.itgowo.socketframework.PackageMessage;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class Test {
@@ -57,33 +58,57 @@ public class Test {
 
         byte[] test1 = new byte[]{
                 121};
-        List<PackageMessage> packageMessage1= PackageMessage.packageMessage(Unpooled.wrappedBuffer(test1));
+        List<PackageMessage> packageMessage1 = PackageMessage.packageMessage(Unpooled.wrappedBuffer(test1));
         byte[] test2 = new byte[]{
-                 0, 0, 0, 24,
+                0, 0, 0, 24,
                 3, 3, 44, 10,
                 23,
                 33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56
 
                 //下面是第二个数据包的数据，模拟黏包拆包操作
-                ,121,
+                , 121,
                 0, 0, 0, 24,
                 3, 3, 44, 10
                 //模拟半包发送
 //                ,23,
 //                33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56
-               };
-        List<PackageMessage> packageMessage2= PackageMessage.packageMessage(Unpooled.wrappedBuffer(test2));
+        };
+        List<PackageMessage> packageMessage2 = PackageMessage.packageMessage(Unpooled.wrappedBuffer(test2));
         byte[] test3 = new byte[]{
                 23,
                 33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56
                 //下面是第三个数据包
-                ,121
+                , 121
                 , 0, 0, 0, 24,
                 3, 3, 44, 10,
                 23,
                 33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56};
-        List<PackageMessage> packageMessage3= PackageMessage.packageMessage(Unpooled.wrappedBuffer(test3));
+        List<PackageMessage> packageMessage3 = PackageMessage.packageMessage(Unpooled.wrappedBuffer(test3));
+        packageMessage3.get(0).getData().capacity();
         System.out.println("ddd");
+
+        byte[] aaa1 = new byte[]{11, 12};
+        byte[] aaa2 = new byte[]{22, 33, 44, 55, 66, 77};
+        ByteBuffer buffer = ByteBuffer.newByteBuffer(2);
+        try {
+            buffer.writeBytes(aaa1);
+            System.out.println("capacity:" + buffer.capacity() + "  readableBytes:" + buffer.readableBytes() + "   writableBytes:" + buffer.writableBytes());
+            buffer.writeBytes(aaa2);
+            System.out.println("capacity:" + buffer.capacity() + "  readableBytes:" + buffer.readableBytes() + "   writableBytes:" + buffer.writableBytes());
+            int i1 = buffer.read();
+            System.out.println("capacity:" + buffer.capacity() + "  readableBytes:" + buffer.readableBytes() + "   writableBytes:" + buffer.writableBytes());
+            int i2 = buffer.readInt();
+            System.out.println("capacity:" + buffer.capacity() + "  readableBytes:" + buffer.readableBytes() + "   writableBytes:" + buffer.writableBytes());
+            byte[] b1 = new byte[3];
+            buffer.readBytes(b1);
+            System.out.println("capacity:" + buffer.capacity() + "  readableBytes:" + buffer.readableBytes() + "   writableBytes:" + buffer.writableBytes());
+
+        } catch (ByteBuffer.ByteBufferException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(Arrays.toString(aaa1));
+        System.out.println(Arrays.toString(aaa2));
     }
 
 }
