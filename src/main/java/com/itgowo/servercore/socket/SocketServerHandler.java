@@ -1,7 +1,6 @@
 package com.itgowo.servercore.socket;
 
 import com.itgowo.servercore.ServerHandler;
-import com.itgowo.servercore.onServerListener;
 import io.netty.channel.ChannelHandlerContext;
 
 /**
@@ -9,25 +8,25 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class SocketServerHandler implements ServerHandler {
     private ChannelHandlerContext ctx;
-    private byte[] bytes;
+    private ByteBuffer byteBuffer;
 
-    public SocketServerHandler(ChannelHandlerContext ctx, byte[] bytes) {
+    public SocketServerHandler(ChannelHandlerContext ctx, ByteBuffer bytes) {
         this.ctx = ctx;
-        this.bytes = bytes;
+        this.byteBuffer = bytes;
     }
 
-    public byte[] getBytes() {
-        return bytes;
+    public ByteBuffer getByteBuffer() {
+        return byteBuffer;
     }
 
-    public SocketServerHandler setBytes(byte[] bytes) {
-        this.bytes = bytes;
+    public SocketServerHandler setByteBuffer(ByteBuffer byteBuffer) {
+        this.byteBuffer = byteBuffer;
         return this;
     }
 
     @Override
     public String toString() {
-        return new String(bytes);
+        return new String(byteBuffer.readableBytesArray());
     }
 
     public ChannelHandlerContext getCtx() {

@@ -2,6 +2,7 @@ package com.itgowo.servercore;
 
 import com.itgowo.servercore.socket.ByteBuffer;
 import com.itgowo.socketframework.PackageMessage;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 import java.util.Arrays;
@@ -58,7 +59,7 @@ public class Test {
 
         byte[] test1 = new byte[]{
                 121};
-        List<PackageMessage> packageMessage1 = PackageMessage.packageMessage(Unpooled.wrappedBuffer(test1));
+        List<PackageMessage> packageMessage1 = PackageMessage.packageMessage(ByteBuffer.newByteBuffer().writeBytes(test1));
         byte[] test2 = new byte[]{
                 0, 0, 0, 24,
                 3, 3, 44, 10,
@@ -73,7 +74,7 @@ public class Test {
 //                ,23,
 //                33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56
         };
-        List<PackageMessage> packageMessage2 = PackageMessage.packageMessage(Unpooled.wrappedBuffer(test2));
+        List<PackageMessage> packageMessage2 = PackageMessage.packageMessage(ByteBuffer.newByteBuffer().writeBytes(test2));
         byte[] test3 = new byte[]{
                 23,
                 33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56
@@ -83,8 +84,7 @@ public class Test {
                 3, 3, 44, 10,
                 23,
                 33, 22, 11, 44, 55, 66, 77, 88, 99, 11, 23, 34, 45, 56};
-        List<PackageMessage> packageMessage3 = PackageMessage.packageMessage(Unpooled.wrappedBuffer(test3));
-        packageMessage3.get(0).getData().capacity();
+        List<PackageMessage> packageMessage3 = PackageMessage.packageMessage(ByteBuffer.newByteBuffer().writeBytes(test3));
         System.out.println("ddd");
 
         byte[] aaa1 = new byte[]{11, 12};

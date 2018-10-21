@@ -6,10 +6,10 @@ import java.io.IOException;
  * @author lujianchao
  * 数组缓存处理类
  * 故事：
- *      写一个TCP长连接方案，遇到黏包分包问题，服务端于是用ByteArrayOutStream实现了，感觉太过于麻烦，
- *  于是用java nio 的 ByteBuffer，但是不太灵活，最后用Netty的ByteBuf类，豁然开朗，尽然可以把代码
- *  压缩到这么少，转念一想，Android端怎么实现呢？毕竟引入Netty包太大，即使是部分代码也很大。Nio的ByteBuffer
- *  呢？遇见好用的自然看不上不太灵活的，于是写了此类解决。
+ * 写一个TCP长连接方案，遇到黏包分包问题，服务端于是用ByteArrayOutStream实现了，感觉太过于麻烦，
+ * 于是用java nio 的 ByteBuffer，但是不太灵活，最后用Netty的ByteBuf类，豁然开朗，尽然可以把代码
+ * 压缩到这么少，转念一想，Android端怎么实现呢？毕竟引入Netty包太大，即使是部分代码也很大。Nio的ByteBuffer
+ * 呢？遇见好用的自然看不上不太灵活的，于是写了此类解决。
  */
 public class ByteBuffer {
     /**
@@ -27,20 +27,78 @@ public class ByteBuffer {
     }
 
     /**
-     * 重置指针位置
+     * 重置指针位置,如果大于写入位置，则可读位置重置为写入位置，readableBytes()结果则为0
+     *
      * @param position
      * @return
      * @throws ByteBufferException
      */
-    public ByteBuffer readerIndex(int position) throws ByteBufferException {
+    public ByteBuffer readerIndex(int position) {
         if (position <= writerIndex) {
             readerIndex = position;
+        } else {
+            readerIndex = writerIndex;
         }
-        throw new ByteBufferException("readerIndex < writerIndex");
+        return this;
+    }
+
+    /**
+     * 获取未处理数组，包含未使用部分
+     *
+     * @return
+     */
+    public byte[] array() {
+        return data;
+    }
+
+    /**
+     * 清理指针标记，数组内容保留，但是会被覆盖，除了array()获取原始数组外无法得到旧数据
+     *
+     * @return
+     */
+    public ByteBuffer clear() {
+        readerIndex = 0;
+        writerIndex = 0;
+        return this;
+    }
+
+    /**
+     * 获取剩余可读数据
+     *
+     * @return
+     */
+    public byte[] readableBytesArray() {
+        byte[] bytes = new byte[readableBytes()];
+        readBytesFromBytes(data, bytes, readerIndex);
+        return bytes;
+    }
+
+    /**
+     * 获取所有写入的数据
+     *
+     * @return
+     */
+    public byte[] readAllWriteBytesArray() {
+        byte[] bytes = new byte[writerIndex];
+        readBytesFromBytes(data, bytes, 0);
+        return bytes;
+    }
+
+    /**
+     * 删除已读部分，重新初始化数组
+     */
+    public void discardReadBytes() {
+        byte[] newBytes = new byte[capacity()];
+        int oldReadableBytes = readableBytes();
+        System.arraycopy(data, readerIndex, newBytes, 0, oldReadableBytes);
+        writerIndex = oldReadableBytes;
+        readerIndex = 0;
+        data = newBytes;
     }
 
     /**
      * 读取指针位置
+     *
      * @return
      */
     public int readerIndex() {
@@ -49,6 +107,7 @@ public class ByteBuffer {
 
     /**
      * 写入指针位置
+     *
      * @return
      */
     public int writerIndex() {
@@ -57,6 +116,7 @@ public class ByteBuffer {
 
     /**
      * 当前可读数据量，writerIndex - readerIndex
+     *
      * @return
      */
     public int readableBytes() {
@@ -65,6 +125,7 @@ public class ByteBuffer {
 
     /**
      * 当前可写入数据量，每次触发扩容后都不一样
+     *
      * @return
      */
     public int writableBytes() {
@@ -81,6 +142,7 @@ public class ByteBuffer {
 
     /**
      * 当前容量，当写入数据超过当前容量后自动扩容
+     *
      * @return
      */
     public int capacity() {
@@ -89,6 +151,7 @@ public class ByteBuffer {
 
     /**
      * 读取数据到byte，1 byte，从readIndex位置开始
+     *
      * @return
      * @throws ByteBufferException
      */
@@ -103,7 +166,24 @@ public class ByteBuffer {
     }
 
     /**
+     * 读取数据到byte，1 byte，从readIndex位置开始
+     *
+     * @return
+     * @throws ByteBufferException
+     */
+    public byte readByte() throws ByteBufferException {
+        if (readableBytes() > 0) {
+            byte i = data[readerIndex];
+            readerIndex++;
+            return i;
+        } else {
+            throw new ByteBufferException("readableBytes = 0");
+        }
+    }
+
+    /**
      * 读取integer值，读4 byte转换为integer，从readIndex位置开始
+     *
      * @return
      * @throws ByteBufferException
      */
@@ -119,6 +199,7 @@ public class ByteBuffer {
 
     /**
      * 读取数据到bytes，从readIndex位置开始
+     *
      * @param bytes
      * @return
      * @throws ByteBufferException
@@ -134,55 +215,114 @@ public class ByteBuffer {
     }
 
     /**
-     * 写入Byte数据，1 byte
+     * 读取数据到另一个ByteBuffer
      * @param b
      * @return
      */
-    public int writeByte(byte b) {
+    public int readBytes(ByteBuffer b) {
+        byte[] bytes = new byte[b.writableBytes()];
+        int result = readBytesFromBytes(data, bytes, readerIndex);
+        readerIndex += bytes.length;
+        b.writeBytes(bytes);
+        return result;
+
+    }
+
+    /**
+     * 写入Byte数据，1 byte
+     *
+     * @param b
+     * @return
+     */
+    public ByteBuffer writeByte(byte b) {
         checkWriteLengthAndInit(1);
         data[writerIndex] = b;
         writerIndex++;
-        return 1;
+        return this;
 
     }
 
     /**
      * 写入int值的byte转换结果，即丢弃高位
+     *
      * @param b
      * @return
      */
-    public int write(int b) {
+    public ByteBuffer write(int b) {
         checkWriteLengthAndInit(1);
         data[writerIndex] = (byte) b;
         writerIndex++;
-        return 1;
+        return this;
 
     }
 
     /**
      * 写入integer数据，4 byte
+     *
      * @param b
      * @return
      */
-    public int writeInt(int b) {
+    public ByteBuffer writeInt(int b) {
         checkWriteLengthAndInit(4);
         writeBytesToBytes(intToByteArray(b), data, writerIndex);
         writerIndex += 4;
-        return 4;
+        return this;
 
     }
 
     /**
      * 写入数组
+     *
      * @param b
      * @return
      */
-    public int writeBytes(byte[] b) {
+    public ByteBuffer writeBytes(byte[] b) {
         checkWriteLengthAndInit(b.length);
         writeBytesToBytes(b, data, writerIndex);
         writerIndex += b.length;
-        return b.length;
+        return this;
+    }
 
+    /**
+     * 写入数组,并指定写入长度
+     *
+     * @param b
+     * @return
+     */
+    public ByteBuffer writeBytes(byte[] b, int dataLength) {
+        checkWriteLengthAndInit(b.length);
+        writeBytesToBytes(b, data, writerIndex, dataLength);
+        writerIndex += b.length;
+        return this;
+    }
+
+    /*
+     * 写入一个ByteBuffer可读数据
+     * @param b
+     * @return
+     */
+    public ByteBuffer writeBytes(ByteBuffer b) {
+        int readableBytes = b.readableBytes();
+        checkWriteLengthAndInit(readableBytes);
+        writeBytesToBytes(b.readableBytesArray(), data, writerIndex);
+        b.readerIndex(b.writerIndex);
+        writerIndex += readableBytes;
+        return this;
+    }
+
+    /**
+     * 写入一个ByteBuffer可读数据的部分长度
+     *
+     * @param b
+     * @param dataLength
+     * @return
+     */
+    public ByteBuffer writeBytes(ByteBuffer b, int dataLength) {
+        checkWriteLengthAndInit(dataLength);
+        writeBytesToBytes(b.readableBytesArray(), data, writerIndex, dataLength);
+        b.readerIndex(b.readerIndex + dataLength);
+        writerIndex += dataLength;
+        return this;
     }
 
     /**
@@ -229,9 +369,21 @@ public class ByteBuffer {
      * @param targetPosition 新数组被写入位置
      * @return
      */
-    private int writeBytesToBytes(byte[] src, byte[] target, int targetPosition) {
-        System.arraycopy(src, 0, target, targetPosition, src.length);
-        return src.length;
+    private ByteBuffer writeBytesToBytes(byte[] src, byte[] target, int targetPosition) {
+        return writeBytesToBytes(src, target, targetPosition, src.length);
+    }
+
+    /**
+     * 数组复制，向一个数组写入一个数组数组
+     *
+     * @param src            来源数组
+     * @param target         被写入新数据数组
+     * @param targetPosition 新数组被写入位置
+     * @return
+     */
+    private ByteBuffer writeBytesToBytes(byte[] src, byte[] target, int targetPosition, int dataLength) {
+        System.arraycopy(src, 0, target, targetPosition, dataLength);
+        return this;
     }
 
     /**

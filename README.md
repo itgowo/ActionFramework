@@ -155,11 +155,11 @@ Web：http://itgowo.com
                 basestring.append(param.getKey()).append("=").append(param.getValue());
             }
             // 使用MD5对待签名串求签
-            byte[] bytes = null;
+            byte[] byteBuffer = null;
             try {
                 MessageDigest md5 = MessageDigest.getInstance("MD5");
                 try {
-                    bytes = md5.digest(basestring.toString().getBytes("UTF-8"));
+                    byteBuffer = md5.digest(basestring.toString().getBytes("UTF-8"));
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
@@ -168,8 +168,8 @@ Web：http://itgowo.com
             }
             // 将MD5输出的二进制结果转换为小写的十六进制
             StringBuilder sign1 = new StringBuilder();
-            for (int i = 0; i < bytes.length; i++) {
-                String hex = Integer.toHexString(bytes[i] & 0xFF);
+            for (int i = 0; i < byteBuffer.length; i++) {
+                String hex = Integer.toHexString(byteBuffer[i] & 0xFF);
                 if (hex.length() == 1) {
                     sign1.append("0");
                 }

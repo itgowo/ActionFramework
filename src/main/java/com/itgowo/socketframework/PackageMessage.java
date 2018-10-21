@@ -1,7 +1,6 @@
 package com.itgowo.socketframework;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import com.itgowo.servercore.socket.ByteBuffer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,7 +74,7 @@ public class PackageMessage {
     /**
      * 下次处理的半包数据
      */
-    private static ByteBuf nextData = Unpooled.buffer();
+    private static ByteBuffer nextData = ByteBuffer.newByteBuffer();
     /**
      * type 1 byte 消息类型  系统协议  范围-127 ~ 128
      */
@@ -95,7 +94,7 @@ public class PackageMessage {
     /**
      * 承载数据
      */
-    private ByteBuf data;
+    private ByteBuffer data;
     /**
      * 当前处理进度，初始小于6byte不进入进度
      * 0   new 出来默认值
@@ -145,17 +144,11 @@ public class PackageMessage {
         return this;
     }
 
-    public ByteBuf getData() {
+    public ByteBuffer getData() {
         return data;
     }
 
-    public byte[] getDataBytes() {
-        byte[] bytes = new byte[data.readableBytes()];
-        data.getBytes(0, bytes);
-        return bytes;
-    }
-
-    public PackageMessage setData(ByteBuf data) {
+    public PackageMessage setData(ByteBuffer data) {
         this.data = data;
         data.readerIndex(0);
         length = data.readableBytes() + LENGTH_HEAD;
@@ -164,9 +157,8 @@ public class PackageMessage {
     }
 
     public PackageMessage setData(byte[] data) {
-        ByteBuf byteBuf = Unpooled.buffer();
-        byteBuf.writeBytes(data);
-        setData(byteBuf);
+        this.data.clear();
+        this.data.writeBytes(data);
         return this;
     }
 
@@ -177,7 +169,7 @@ public class PackageMessage {
         return new PackageMessage();
     }
 
-    public ByteBuf encodePackageMessage() {
+    public ByteBuffer encodePackageMessage() {
         if (type != TYPE_FIX_LENGTH && type != TYPE_DYNAMIC_LENGTH) {
             return null;
         }
@@ -191,20 +183,20 @@ public class PackageMessage {
         if (data.readerIndex(0).readableBytes() != length - LENGTH_HEAD) {
             return null;
         }
-        ByteBuf byteBuf = Unpooled.buffer();
-        byteBuf.writeByte(type)
+        ByteBuffer byteBuffer = ByteBuffer.newByteBuffer();
+        byteBuffer.writeByte((byte) type)
                 .writeInt(length)
-                .writeByte(dataType)
+                .writeByte((byte) dataType)
                 .writeInt(dataSign)
                 .writeBytes(data);
-        return byteBuf;
+        return byteBuffer;
     }
 
-    public static List<PackageMessage> packageMessage(ByteBuf byteBuf) {
+    public static List<PackageMessage> packageMessage(ByteBuffer byteBuffer) {
         List<PackageMessage> messageList = new ArrayList<>();
         try {
             while (true) {
-                PackageMessage packageMessage = decodePackageMessage(byteBuf);
+                PackageMessage packageMessage = decodePackageMessage(byteBuffer);
                 if (packageMessage != null && packageMessage.isCompleted()) {
                     messageList.add(packageMessage);
                 } else {
@@ -217,16 +209,16 @@ public class PackageMessage {
         return messageList;
     }
 
-    private static PackageMessage decodeFixLengthPackageMessage(ByteBuf inputStream) throws IOException {
+    private static PackageMessage decodeFixLengthPackageMessage(ByteBuffer byteBuffer) throws IOException {
         return null;
     }
 
-    private static PackageMessage decodeDynamicLengthPackageMessage(ByteBuf byteBuf) throws IOException {
-        pack.setLength(byteBuf.readInt());
-        pack.setDataType(byteBuf.readByte());
+    private static PackageMessage decodeDynamicLengthPackageMessage(ByteBuffer byteBuffer) throws IOException {
+        pack.setLength(byteBuffer.readInt());
+        pack.setDataType(byteBuffer.readByte());
         if (pack.getLength() < 6) {
             pack.step = STEP_DATA_INVALID;
-            byteBuf.readerIndex(0);
+            byteBuffer.readerIndex(0);
             return pack;
         }
         if (pack.getLength() == 6) {
@@ -234,22 +226,22 @@ public class PackageMessage {
             return pack;
         }
         //pack.getLength>6情况
-        if (byteBuf.readableBytes() < 4) {
-            byteBuf.readerIndex(0);
+        if (byteBuffer.readableBytes() < 4) {
+            byteBuffer.readerIndex(0);
             //可能存在数据读取一半情况，直接返回，返回后由上游处理器暂存输入流剩余数据，下次合并输入流。
             return pack;
         }
-        pack.dataSign = byteBuf.readInt();
-        pack.data = Unpooled.buffer();
+        pack.dataSign = byteBuffer.readInt();
+        pack.data = ByteBuffer.newByteBuffer();
         //数据包大小在已有数据范围内，即要执行拆包操作
         int dataLength = pack.getLength() - LENGTH_HEAD;
-        if (dataLength <= byteBuf.readableBytes()) {
-            pack.data.writeBytes(byteBuf, dataLength);
-            pack.step=STEP_DATA_COMPLETEED;
+        if (dataLength <= byteBuffer.readableBytes()) {
+            pack.data.writeBytes(byteBuffer, dataLength);
+            pack.step = STEP_DATA_COMPLETEED;
             return pack;
         } else {
-            byteBuf.readerIndex(0);
-            pack.step=STEP_DATA_PART;
+            byteBuffer.readerIndex(0);
+            pack.step = STEP_DATA_PART;
             return pack;
         }
     }
@@ -266,8 +258,8 @@ public class PackageMessage {
         return length - LENGTH_HEAD;
     }
 
-    private static synchronized PackageMessage decodePackageMessage(ByteBuf byteBuf) throws IOException {
-        nextData.writeBytes(byteBuf);
+    private static synchronized PackageMessage decodePackageMessage(ByteBuffer byteBuffer) throws IOException {
+        nextData.writeBytes(byteBuffer);
         if (nextData.readableBytes() < 6) {
             return null;
         }
@@ -275,7 +267,7 @@ public class PackageMessage {
         nextData.readerIndex(0);
         int type = nextData.readByte();
         if (TYPE_FIX_LENGTH == type || TYPE_DYNAMIC_LENGTH == type) {
-            if (pack == null) {
+            if (pack == null || pack.step == STEP_DATA_COMPLETEED) {
                 pack = new PackageMessage();
             }
             pack.setType(type);
@@ -340,6 +332,7 @@ public class PackageMessage {
      * @return
      */
     public int dataSign() {
+
         byte[] bytes1 = new byte[4];
         if (data == null) {
             return 0;
@@ -355,11 +348,15 @@ public class PackageMessage {
         int position = length / 4;
         bytes1[0] = (byte) position;
         data.readerIndex(position);
-        bytes1[1] = data.readByte();
-        position = length * 3 / 4;
-        bytes1[2] = (byte) position;
-        data.readerIndex(position);
-        bytes1[3] = data.readByte();
+        try {
+            bytes1[1] = data.readByte();
+            position = length * 3 / 4;
+            bytes1[2] = (byte) position;
+            data.readerIndex(position);
+            bytes1[3] = data.readByte();
+        } catch (ByteBuffer.ByteBufferException e) {
+            e.printStackTrace();
+        }
         return byteArrayToInt(bytes1);
     }
 

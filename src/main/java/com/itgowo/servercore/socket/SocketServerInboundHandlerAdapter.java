@@ -8,7 +8,6 @@ package com.itgowo.servercore.socket;/*
  */
 
 import com.itgowo.servercore.onServerListener;
-import com.itgowo.servercore.utils.Utils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 
@@ -17,7 +16,7 @@ import io.netty.channel.ChannelInboundHandler;
  */
 public class SocketServerInboundHandlerAdapter implements ChannelInboundHandler {
     private onServerListener onServerListener;
-    private byte[] bytes = new byte[0];
+    private ByteBuffer bytes = ByteBuffer.newByteBuffer();
 
     public SocketServerInboundHandlerAdapter(com.itgowo.servercore.onServerListener onServerListener) {
         this.onServerListener = onServerListener;
@@ -50,16 +49,16 @@ public class SocketServerInboundHandlerAdapter implements ChannelInboundHandler 
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        byte[] bytes= (byte[]) msg;
-        this.bytes = Utils.append(this.bytes, bytes);
+        byte[] bytes = (byte[]) msg;
+        this.bytes.writeBytes(bytes);
     }
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception{
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         if (onServerListener != null) {
             onServerListener.onReceiveHandler(new SocketServerHandler(ctx, bytes));
         }
-        bytes = new byte[0];
+        bytes = ByteBuffer.newByteBuffer();
     }
 
     @Override
