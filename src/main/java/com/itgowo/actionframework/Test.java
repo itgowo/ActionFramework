@@ -1,5 +1,7 @@
 package com.itgowo.actionframework;
 
+import com.itgowo.servercore.http.HttpServerManager;
+
 public class Test {
 
     public static void main(String[] args) {
@@ -12,7 +14,7 @@ public class Test {
         String s3 = "/Users/lujianchao/itgowo/BaseServer/out/artifacts/baseServer_jar/actionframework.jar";
 //        List<ClassEntry> classEntries = ClassUtils.getClasssFromJarFile(s1, "com.itgowo.actionframework");
 //        ClassEntry classEntry=new ClassEntry().parseClassInfo(s1,s2);
-
+        HttpServerManager httpServerManager;
     }
 
 

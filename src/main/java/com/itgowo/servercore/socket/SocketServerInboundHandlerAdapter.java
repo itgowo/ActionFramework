@@ -8,27 +8,21 @@ package com.itgowo.servercore.socket;/*
  */
 
 import com.itgowo.servercore.onServerListener;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandler;
+import io.netty.channel.SimpleChannelInboundHandler;
 
 /**
- * Created by hnvfh on 2017/3/28.
+ * Created by lujianchao on 2017/3/28.
  */
-public class SocketServerInboundHandlerAdapter implements ChannelInboundHandler {
+public class SocketServerInboundHandlerAdapter extends SimpleChannelInboundHandler<ByteBuf> {
     private onServerListener onServerListener;
-    private ByteBuffer bytes = ByteBuffer.newByteBuffer();
+    private ByteBuf bytes = Unpooled.buffer();
 
     public SocketServerInboundHandlerAdapter(com.itgowo.servercore.onServerListener onServerListener) {
         this.onServerListener = onServerListener;
-    }
-
-    @Override
-    public void channelRegistered(ChannelHandlerContext ctx) {
-
-    }
-
-    @Override
-    public void channelUnregistered(ChannelHandlerContext ctx) {
     }
 
     @Override
@@ -54,27 +48,17 @@ public class SocketServerInboundHandlerAdapter implements ChannelInboundHandler 
     }
 
     @Override
+    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+
+    }
+
+    @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         if (onServerListener != null) {
-            onServerListener.onReceiveHandler(new SocketServerHandler(ctx, bytes));
+            onServerListener.onReceiveHandler(new SocketServerHandler(ctx, ByteBuffer.newByteBuffer().writeBytes(bytes.array(), bytes.readableBytes())));
+            bytes.release();
         }
-        bytes = ByteBuffer.newByteBuffer();
-    }
-
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-    }
-
-    @Override
-    public void channelWritabilityChanged(ChannelHandlerContext ctx) {
-    }
-
-    @Override
-    public void handlerAdded(ChannelHandlerContext ctx) {
-    }
-
-    @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) {
+        bytes = Unpooled.buffer();
     }
 
     @Override

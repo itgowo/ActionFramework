@@ -11,7 +11,7 @@ import com.itgowo.servercore.utils.LogU;
 import java.util.logging.Level;
 
 public class DemoMain {
-    private static HttpServerManager mHttpServer = new HttpServerManager();
+    private static HttpServerManager httpServerManager = new HttpServerManager();
     private static Dispatcher dispatcher = new Dispatcher();
 
     public static void main(String[] args) {
@@ -22,7 +22,7 @@ public class DemoMain {
         int portint = BaseConfig.getServerPort();
         ServerManager.setLogger(LogU.getLogU("DemoServer",Level.ALL));
 
-        mHttpServer.setThreadConfig(BaseConfig.getNettyBossGroupThreadNum(), BaseConfig.getNettyWorkerGroupThreadNum());
+        httpServerManager.setThreadConfig(BaseConfig.getNettyBossGroupThreadNum(), BaseConfig.getNettyWorkerGroupThreadNum());
         dispatcher.setValidSign(BaseConfig.getServerIsValidSign());
         dispatcher.setValidTimeDifference(BaseConfig.getServerIsValidTimeDifference());
         dispatcher.setServerClientTimeDifference(BaseConfig.getServerActionTimeDifference());
@@ -42,13 +42,14 @@ public class DemoMain {
                 return JSON.toJSONString(o);
             }
         });
-        mHttpServer.setOnServerListener(dispatcher);
-        mHttpServer.setServerName("DemoServer");
+        httpServerManager.setOnServerListener(dispatcher);
+        httpServerManager.setServerName("DemoServer");
         int finalPortint = portint;
         Thread mGameThread = new Thread(() -> {
             try {
                 Thread.currentThread().setName("GameMainThread");
-                mHttpServer.start(finalPortint);
+                httpServerManager.prepare(finalPortint);
+                httpServerManager.start();
             } catch (Exception mEm) {
                 mEm.printStackTrace();
             }

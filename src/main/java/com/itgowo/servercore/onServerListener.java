@@ -9,6 +9,8 @@ public interface onServerListener<Handler extends ServerHandler> {
 
     void onReceiveHandler(Handler handler) throws Exception;
 
+    void onUserEventTriggered(Object event);
+
     void onError(Throwable throwable);
 
     void onServerStarted(int serverPort);

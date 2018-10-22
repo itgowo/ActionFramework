@@ -1,6 +1,7 @@
 package com.itgowo.servercore.http;
 
 import com.itgowo.servercore.ServerHandler;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -21,7 +22,7 @@ public class HttpServerHandler implements ServerHandler {
     private ChannelHandlerContext ctx;
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
-    private byte[] body;
+    private ByteBuf body;
     private String path;
     private String uri;
     private Map<String, String> parameters=new HashMap<>();
@@ -32,7 +33,7 @@ public class HttpServerHandler implements ServerHandler {
     }
 
 
-    public HttpServerHandler(ChannelHandlerContext ctx, HttpRequest httpRequest, HttpResponse httpResponse, byte[] body) {
+    public HttpServerHandler(ChannelHandlerContext ctx, HttpRequest httpRequest, HttpResponse httpResponse, ByteBuf body) {
         this.ctx = ctx;
         this.httpRequest = httpRequest;
         this.httpResponse = httpResponse;
@@ -41,7 +42,6 @@ public class HttpServerHandler implements ServerHandler {
             QueryStringDecoder decoderQuery = new QueryStringDecoder(this.httpRequest.uri());
             Map<String, List<String>> stringListMap = decoderQuery.parameters();
             for (Map.Entry<String, List<String>> stringListEntry : stringListMap.entrySet()) {
-                String value;
                 if (stringListEntry.getValue() == null || stringListEntry.getValue().size() == 0) {
                     continue;
                 }
@@ -99,7 +99,7 @@ public class HttpServerHandler implements ServerHandler {
         if (body == null) {
             return String.valueOf("");
         }
-        return new String(body, charset);
+        return body.toString(charset);
     }
 
     public Map<String, String> getParameters() {

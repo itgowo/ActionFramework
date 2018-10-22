@@ -10,7 +10,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 public class SimpleServer {
@@ -36,13 +35,18 @@ public class SimpleServer {
 //                if (path.equalsIgnoreCase("")){
 //                    path="index.html";
 //                }
-                handler.sendFile(new File("/Users/lujianchao/GitDemo/RemoteDataController/RemoteDataControllerServer/web/"+path),true);
+//                handler.sendFile(new File("/Users/lujianchao/GitDemo/RemoteDataController/RemoteDataControllerServer/web/"+path),true);
 
-//                try {
-//                    handler.sendData("我收到了", false);
-//                } catch (UnsupportedEncodingException e) {
-//                    e.printStackTrace();
-//                }
+                try {
+                    handler.sendData("我收到了", false);
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onUserEventTriggered(Object event) {
+
             }
 
             @Override
@@ -60,18 +64,23 @@ public class SimpleServer {
 
             }
         });
-        httpServerManager.start(12000);
+        httpServerManager.prepare(12000);
+        httpServerManager.start();
     }
 
     public static void testSocketServer() throws Exception {
         SocketServerManager socketServerManager = new SocketServerManager();
         socketServerManager.setThreadConfig(2, 4);
-        socketServerManager.setOnReceiveHandleListener(new onServerListener<SocketServerHandler>() {
+        socketServerManager.setOnServerListener(new onServerListener<SocketServerHandler>() {
             @Override
             public void onReceiveHandler(SocketServerHandler handler) {
                 System.out.println("收到消息" + handler);
                 System.out.println("发送消息");
                 handler.sendData("啦啦啦".getBytes());
+            }
+
+            @Override
+            public void onUserEventTriggered(Object event) {
 
             }
 
@@ -100,13 +109,14 @@ public class SimpleServer {
 
             }
         });
-        socketServerManager.start(12001);
+        socketServerManager.prepare(12001);
+        socketServerManager.start();
     }
 
     public static void testWebSocketServer() throws Exception {
         WebSocketServerManager manager = new WebSocketServerManager();
         manager.setThreadConfig(1, 1);
-        manager.setOnReceiveHandleListener(new onServerListener<WebSocketServerHandler>() {
+        manager.setOnServerListener(new onServerListener<WebSocketServerHandler>() {
             @Override
             public void onChannelActive(ChannelHandlerContext ctx) {
                 System.out.println("SimpleServer.onChannelActive");
@@ -124,6 +134,11 @@ public class SimpleServer {
             }
 
             @Override
+            public void onUserEventTriggered(Object event) {
+
+            }
+
+            @Override
             public void onError(Throwable throwable) {
                 throwable.printStackTrace();
             }
@@ -138,6 +153,9 @@ public class SimpleServer {
                 System.out.println("SimpleServer.onServerStop");
             }
         });
-        manager.start(1221, false);
+        manager.setSSL(false).setWebsocketPath("");
+        manager.prepare(1221);
+        manager.start();
     }
+
 }

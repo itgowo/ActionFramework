@@ -324,6 +324,11 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
         }
     }
 
+    @Override
+    public void onUserEventTriggered(Object event) {
+
+    }
+
     private void AnalysisTps() {
         if (scheduledFuture != null) {
             scheduledFuture.cancel(true);

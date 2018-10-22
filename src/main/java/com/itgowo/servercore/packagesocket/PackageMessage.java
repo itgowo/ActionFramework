@@ -1,4 +1,4 @@
-package com.itgowo.socketframework;
+package com.itgowo.servercore.packagesocket;
 
 import com.itgowo.servercore.socket.ByteBuffer;
 
@@ -70,7 +70,7 @@ public class PackageMessage {
     /**
      * 处理黏包分包
      */
-    private static PackageMessage pack;
+    private PackageMessage pack;
     /**
      * 下次处理的半包数据
      */
@@ -157,8 +157,9 @@ public class PackageMessage {
     }
 
     public PackageMessage setData(byte[] data) {
-        this.data.clear();
-        this.data.writeBytes(data);
+        ByteBuffer buffer = ByteBuffer.newByteBuffer();
+        buffer.writeBytes(data);
+        setData(buffer);
         return this;
     }
 
@@ -169,12 +170,24 @@ public class PackageMessage {
         return new PackageMessage();
     }
 
+    public static PackageMessage getHeartPackageMessage() {
+        PackageMessage packageMessage = new PackageMessage().setType(PackageMessage.TYPE_DYNAMIC_LENGTH).setLength(6).setDataType(PackageMessage.DATA_TYPE_HEART);
+        return packageMessage;
+    }
+
     public ByteBuffer encodePackageMessage() {
         if (type != TYPE_FIX_LENGTH && type != TYPE_DYNAMIC_LENGTH) {
             return null;
         }
-        if (length <= 6) {
+
+        if (length < 6) {
             return null;
+        }
+        if (length == 6) {
+            ByteBuffer byteBuffer = ByteBuffer.newByteBuffer();
+            byteBuffer.writeByte((byte) type)
+                    .writeInt(length);
+            return byteBuffer;
         }
         if (dataType == 0) {
             return null;
@@ -192,7 +205,7 @@ public class PackageMessage {
         return byteBuffer;
     }
 
-    public static List<PackageMessage> packageMessage(ByteBuffer byteBuffer) {
+    public List<PackageMessage> packageMessage(ByteBuffer byteBuffer) {
         List<PackageMessage> messageList = new ArrayList<>();
         try {
             while (true) {
@@ -209,11 +222,11 @@ public class PackageMessage {
         return messageList;
     }
 
-    private static PackageMessage decodeFixLengthPackageMessage(ByteBuffer byteBuffer) throws IOException {
+    private PackageMessage decodeFixLengthPackageMessage(ByteBuffer byteBuffer) throws IOException {
         return null;
     }
 
-    private static PackageMessage decodeDynamicLengthPackageMessage(ByteBuffer byteBuffer) throws IOException {
+    private PackageMessage decodeDynamicLengthPackageMessage(ByteBuffer byteBuffer) throws IOException {
         pack.setLength(byteBuffer.readInt());
         pack.setDataType(byteBuffer.readByte());
         if (pack.getLength() < 6) {
@@ -258,7 +271,7 @@ public class PackageMessage {
         return length - LENGTH_HEAD;
     }
 
-    private static synchronized PackageMessage decodePackageMessage(ByteBuffer byteBuffer) throws IOException {
+    private synchronized PackageMessage decodePackageMessage(ByteBuffer byteBuffer) throws IOException {
         nextData.writeBytes(byteBuffer);
         if (nextData.readableBytes() < 6) {
             return null;
@@ -291,7 +304,10 @@ public class PackageMessage {
      * @return
      */
     public boolean isCompleted() {
-        return step == STEP_DATA_COMPLETEED;
+        if (step != STEP_DATA_COMPLETEED) {
+            return false;
+        }
+        return dataSign == dataSign();
     }
 
     /**
@@ -332,7 +348,6 @@ public class PackageMessage {
      * @return
      */
     public int dataSign() {
-
         byte[] bytes1 = new byte[4];
         if (data == null) {
             return 0;
@@ -359,6 +374,4 @@ public class PackageMessage {
         }
         return byteArrayToInt(bytes1);
     }
-
-
 }

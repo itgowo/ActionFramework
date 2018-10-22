@@ -38,7 +38,7 @@ public class ServerManager {
     public static Logger getLogger() {
         if (log == null) {
             synchronized (ServerManager.class) {
-                log = LogU.getLogU("com.itgowo.server.ServerManager", Level.ALL);
+                log = LogU.getLogU("com.itgowo.server.BaseServerManager", Level.ALL);
             }
         }
         return log;
@@ -109,7 +109,8 @@ public class ServerManager {
         Thread mGameThread = new Thread(() -> {
             try {
                 Thread.currentThread().setName("ServerMainThread");
-                httpServerManager.start(portint);
+                httpServerManager.prepare(portint);
+                httpServerManager.start();
             } catch (Exception mEm) {
                 httpServerInitCallback.onError(mEm);
             }

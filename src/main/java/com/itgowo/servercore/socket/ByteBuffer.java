@@ -292,7 +292,7 @@ public class ByteBuffer {
     public ByteBuffer writeBytes(byte[] b, int dataLength) {
         checkWriteLengthAndInit(b.length);
         writeBytesToBytes(b, data, writerIndex, dataLength);
-        writerIndex += b.length;
+        writerIndex += dataLength;
         return this;
     }
 

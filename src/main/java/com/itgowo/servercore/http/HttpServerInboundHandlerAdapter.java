@@ -8,8 +8,8 @@ package com.itgowo.servercore.http;/*
  */
 
 import com.itgowo.servercore.onServerListener;
-import com.itgowo.servercore.utils.Utils;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpContent;
@@ -24,7 +24,7 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
     private onServerListener onServerListener;
     private HttpRequest httpRequest;
     private HttpResponse httpResponse;
-    private byte[] bytes = new byte[0];
+    private ByteBuf byteBuf = Unpooled.buffer();
 
     public HttpServerInboundHandlerAdapter(onServerListener onServerListener) {
         this.onServerListener = onServerListener;
@@ -40,22 +40,19 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
         }
         if (msg instanceof HttpContent) {
             HttpContent content = (HttpContent) msg;
-            ByteBuf buf = content.content();
-            byte[] b = new byte[buf.readableBytes()];
-            buf.getBytes(0, b);
-            this.bytes = Utils.append(this.bytes, b);
-            buf.release();
+            byteBuf.writeBytes(content.content());
+            content.release();
         }
     }
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception{
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         if (onServerListener != null) {
             if (ctx != null && httpRequest != null) {
-                onServerListener.onReceiveHandler(new HttpServerHandler(ctx, httpRequest, httpResponse, bytes));
+                onServerListener.onReceiveHandler(new HttpServerHandler(ctx, httpRequest, httpResponse, byteBuf));
             }
         }
-        bytes = new byte[0];
+        byteBuf = Unpooled.buffer();
     }
 
     @Override
