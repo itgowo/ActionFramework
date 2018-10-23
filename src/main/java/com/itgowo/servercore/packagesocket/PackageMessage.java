@@ -211,6 +211,7 @@ public class PackageMessage {
             while (true) {
                 PackageMessage packageMessage = decodePackageMessage(byteBuffer);
                 if (packageMessage != null && packageMessage.isCompleted()) {
+                    packageMessage.getData().readerIndex(0);
                     messageList.add(packageMessage);
                 } else {
                     break;
@@ -372,6 +373,7 @@ public class PackageMessage {
         } catch (ByteBuffer.ByteBufferException e) {
             e.printStackTrace();
         }
+        data.readerIndex(0);
         return byteArrayToInt(bytes1);
     }
 }

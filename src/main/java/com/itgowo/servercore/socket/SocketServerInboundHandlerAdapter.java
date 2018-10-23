@@ -43,8 +43,7 @@ public class SocketServerInboundHandlerAdapter extends SimpleChannelInboundHandl
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        byte[] bytes = (byte[]) msg;
-        this.bytes.writeBytes(bytes);
+        this.bytes.writeBytes((ByteBuf) msg);
     }
 
     @Override

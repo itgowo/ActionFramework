@@ -127,6 +127,7 @@ public abstract class BaseServerManager {
     public Thread startAsyn() {
         Thread server = new Thread(() -> start());
         server.setName(serverName);
+        server.start();
         return server;
     }
 

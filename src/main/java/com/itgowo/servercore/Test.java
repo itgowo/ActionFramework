@@ -1,5 +1,7 @@
 package com.itgowo.servercore;
 
+import com.itgowo.servercore.socket.client.DemoClient;
+
 public class Test {
     public static void main(String[] args) {
 
@@ -17,7 +19,8 @@ public class Test {
 //                    throwable.printStackTrace();
 //                }
 //            });
-            SimpleServer.testHttpServer();
+//            SimpleServer.testPacgageServer();
+            DemoClient.main(null);
         } catch (Exception e) {
             e.printStackTrace();
         }

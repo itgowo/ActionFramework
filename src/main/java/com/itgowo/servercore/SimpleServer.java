@@ -2,6 +2,8 @@ package com.itgowo.servercore;
 
 import com.itgowo.servercore.http.HttpServerHandler;
 import com.itgowo.servercore.http.HttpServerManager;
+import com.itgowo.servercore.packagesocket.PackageServerHandler;
+import com.itgowo.servercore.packagesocket.PackageServerManager;
 import com.itgowo.servercore.socket.SocketServerHandler;
 import com.itgowo.servercore.socket.SocketServerManager;
 import com.itgowo.servercore.websocket.WebSocketServerHandler;
@@ -156,6 +158,50 @@ public class SimpleServer {
         manager.setSSL(false).setWebsocketPath("");
         manager.prepare(1221);
         manager.start();
+    }
+    public static void testPacgageServer() throws Exception {
+        PackageServerManager packageServerManager = new PackageServerManager();
+        packageServerManager.setThreadConfig(2, 4);
+        packageServerManager.setOnServerListener(new onServerListener<PackageServerHandler>() {
+            @Override
+            public void onReceiveHandler(PackageServerHandler handler) {
+                System.out.println("收到消息" + handler);
+                System.out.println("发送消息");
+                handler.sendData("啦啦啦".getBytes());
+            }
+
+            @Override
+            public void onUserEventTriggered(Object event) {
+
+            }
+
+            @Override
+            public void onChannelActive(ChannelHandlerContext ctx) {
+                System.out.println("SimpleServer.onChannelActive  有新客户端连接，可以交流发送数据");
+            }
+
+            @Override
+            public void onChannelInactive(ChannelHandlerContext ctx) {
+                System.out.println("SimpleServer.onChannelInactive  有客户端失联了");
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+
+            @Override
+            public void onServerStarted(int serverPort) {
+
+            }
+
+            @Override
+            public void onServerStop() {
+
+            }
+        });
+        packageServerManager.prepare(12002);
+        packageServerManager.start();
     }
 
 }

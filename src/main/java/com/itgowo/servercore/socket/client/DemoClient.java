@@ -14,7 +14,7 @@ public class DemoClient {
 
 
     public void testClient() {
-        nioClient = new NioClient(new InetSocketAddress("localhost", 12001), new onSocketMessageListener() {
+        nioClient = new NioClient(new InetSocketAddress("localhost", 16671), new onSocketMessageListener() {
             @Override
             public void onConnectedServer() {
                 PackageMessage packageMessage = PackageMessage.getPackageMessage().setType(PackageMessage.TYPE_DYNAMIC_LENGTH)
