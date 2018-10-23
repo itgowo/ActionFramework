@@ -363,17 +363,10 @@ public class PackageMessage {
         int length = data.readableBytes();
         int position = length / 4;
         bytes1[0] = (byte) position;
-        data.readerIndex(position);
-        try {
-            bytes1[1] = data.readByte();
-            position = length * 3 / 4;
-            bytes1[2] = (byte) position;
-            data.readerIndex(position);
-            bytes1[3] = data.readByte();
-        } catch (ByteBuffer.ByteBufferException e) {
-            e.printStackTrace();
-        }
-        data.readerIndex(0);
+        bytes1[1] = data.array()[position];
+        position = length * 3 / 4;
+        bytes1[2] = (byte) position;
+        bytes1[3] = data.array()[position];
         return byteArrayToInt(bytes1);
     }
 }

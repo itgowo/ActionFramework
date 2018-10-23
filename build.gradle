@@ -1,5 +1,5 @@
 group 'itgowo.com'
-version '0.0.55'
+version '0.0.57'
 
 apply plugin: 'java'
 apply plugin: 'com.novoda.bintray-release'//添加
@@ -28,7 +28,7 @@ publish {
     userOrg = 'itgowo'
     groupId = 'com.itgowo'
     artifactId = 'ActionFramework'
-    publishVersion = '0.0.55'
+    publishVersion = '0.0.57'
     desc = 'A framework that supports the http, socket, and websocket protocols, and includes a set of frameworks that implement actions'
     website = 'https://github.com/itgowo/ActionFramework'
 }
