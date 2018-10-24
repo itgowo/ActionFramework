@@ -55,7 +55,7 @@ public class HttpServerHandler implements ServerHandler {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("WebSocketServerHandler{")
+        stringBuilder.append("HttpServerHandler{")
                 .append("\r\nHttpMethod=").append(httpRequest == null ? "" : httpRequest.method() == null ? "" : httpRequest.method().name())
                 .append("\r\npath='").append(path + '\'')
                 .append("\r\nuri='" + uri + '\'')
@@ -126,7 +126,6 @@ public class HttpServerHandler implements ServerHandler {
     private void addResponseHeaders(FullHttpResponse response, boolean contentIsJson) {
         response.headers().add(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
         response.headers().add(HttpHeaderNames.CONTENT_TYPE, contentIsJson ? "application/json" : "text/html;charset=utf-8");
-        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
     }
 
     /**
@@ -159,6 +158,19 @@ public class HttpServerHandler implements ServerHandler {
         response.headers().add(HttpHeaderNames.LOCATION, newUri);
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
 
+    }
+
+    /**
+     * 返回OPTIONNS请求，默认允许所有
+     */
+    public void sendOptionsResult(){
+        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FOUND);
+        response.headers().add(responseHeader);
+        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS,"*");
+        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS,"*");
+        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
+        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE,"Origin, 3600");
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     /**

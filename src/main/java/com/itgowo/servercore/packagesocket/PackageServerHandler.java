@@ -38,7 +38,8 @@ public class PackageServerHandler implements ServerHandler {
     }
 
     public void sendData(byte[] data) {
-        ctx.writeAndFlush(Unpooled.wrappedBuffer(data));
+        PackageMessage packageMessage=PackageMessage.getPackageMessage().setDataType(PackageMessage.DATA_TYPE_BYTE).setData(data);
+        sendData(packageMessage);
     }
     public void sendData(PackageMessage data) {
         ctx.writeAndFlush(Unpooled.wrappedBuffer(data.encodePackageMessage().readableBytesArray()));
