@@ -1,5 +1,6 @@
 package com.itgowo.servercore.httpclient;
 
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -25,21 +26,21 @@ public class HttpClient {
         timeout = timeout1;
     }
 
-    public static void RequestGet(String url, String requestJson, onCallbackListener listener) {
-        Request(url, HttpMethod.GET, requestJson, listener);
+    public static void RequestGet(String url, Map<String, String> headers, String requestJson, onCallbackListener listener) {
+        Request(url, HttpMethod.GET, headers, requestJson, listener);
     }
 
-    public static void RequestPOST(String url, String requestJson, onCallbackListener listener) {
-        Request(url, HttpMethod.POST, requestJson, listener);
+    public static void RequestPOST(String url, Map<String, String> headers, String requestJson, onCallbackListener listener) {
+        Request(url, HttpMethod.POST, headers, requestJson, listener);
     }
 
-    public static void Request(String url, HttpMethod method, String requestJson, onCallbackListener listener) {
-        executorService.execute(new RequestClient(url, method.getMethod(), requestJson, timeout, listener));
+    public static void Request(String url, HttpMethod method, Map<String, String> headers, String requestJson, onCallbackListener listener) {
+        executorService.execute(new RequestClient(url, method.getMethod(), headers, requestJson, timeout, listener));
     }
 
-    public static Response RequestSync(String url, HttpMethod method, String requestJson) throws Exception {
-        FutureTask futureTask = (FutureTask) executorService.submit(new RequestClientSync(url, method.getMethod(), timeout, requestJson));
-        return (Response) futureTask.get();
+    public static HttpResponse RequestSync(String url, HttpMethod method, Map<String, String> headers, String requestJson) throws Exception {
+        FutureTask futureTask = (FutureTask) executorService.submit(new RequestClientSync(url, method.getMethod(), headers, timeout, requestJson));
+        return (HttpResponse) futureTask.get();
     }
 
 }

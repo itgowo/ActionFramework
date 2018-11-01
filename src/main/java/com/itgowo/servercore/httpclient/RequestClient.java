@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RequestClient implements Runnable {
     private URL url;
@@ -11,14 +13,18 @@ public class RequestClient implements Runnable {
     private String requestMethod = "POST";
     private onCallbackListener listener;
     private int timeout = 15000;
-    private Response response = new Response();
+    private Map<String,String> headers=new HashMap<>();
+    private HttpResponse response = new HttpResponse();
 
-    public RequestClient(String url, String method, String reqestStr, int timeout, onCallbackListener listener) {
+    public RequestClient(String url, String method, Map<String,String> headers, String reqestStr, int timeout, onCallbackListener listener) {
         this.listener = listener;
         this.reqestStr = reqestStr;
         this.requestMethod = method;
         response.setMethod(requestMethod);
         this.timeout = timeout;
+        if (headers!=null){
+            this.headers.putAll(headers);
+        }
         try {
             if (url != null) {
                 if (!url.startsWith("http://") & !url.startsWith("https://")) {
@@ -48,6 +54,10 @@ public class RequestClient implements Runnable {
             httpConn.setRequestProperty("Connection", "Keep-Alive");// 维持长连接
             httpConn.setRequestProperty("Charset", "UTF-8");
 
+            for (Map.Entry<String, String> header : this.headers.entrySet()) {
+                httpConn.setRequestProperty(header.getKey(),header.getValue());
+            }
+
             //连接,也可以不用明文connect，使用下面的httpConn.getOutputStream()会自动connect
             httpConn.connect();
 
@@ -57,17 +67,18 @@ public class RequestClient implements Runnable {
             bos.flush();
             bos.close();
 
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            InputStream inputStream = httpConn.getInputStream();
+            byte[] bytes = new byte[1024];
+            int count;
+            while ((count = inputStream.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, count);
+            }
+            response.setBody(outputStream.toByteArray());
+
             //获得响应状态
             final int resultCode = httpConn.getResponseCode();
             if (HttpURLConnection.HTTP_OK == resultCode) {
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                InputStream inputStream = httpConn.getInputStream();
-                byte[] bytes = new byte[1024];
-                int count;
-                while ((count = inputStream.read(bytes)) != -1) {
-                    outputStream.write(bytes, 0, count);
-                }
-                response.setBody(outputStream.toByteArray());
                 onSuccess(response);
             } else {
                 onError(response.setSuccess(false), new Exception("http code:" + resultCode));
@@ -77,11 +88,11 @@ public class RequestClient implements Runnable {
         }
     }
 
-    private void onSuccess(final Response response) {
+    private void onSuccess(final HttpResponse response) {
         listener.onSuccess(response);
     }
 
-    private void onError(final Response response, final Exception e) {
+    private void onError(final HttpResponse response, final Exception e) {
         listener.onError(response, e);
     }
 }

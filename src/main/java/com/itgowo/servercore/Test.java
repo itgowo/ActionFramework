@@ -1,6 +1,9 @@
 package com.itgowo.servercore;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.itgowo.servercore.socket.client.DemoClient;
+import io.netty.handler.codec.http.HttpHeaderValues;
 
 public class Test {
     public static void main(String[] args) {
@@ -19,14 +22,17 @@ public class Test {
 //                    throwable.printStackTrace();
 //                }
 //            });
-//            SimpleServer.testPacgageServer();
+//            SimpleServer.testHttpServer();
             DemoClient.main(null);
+            String jsonStr="{\"name\":\"小王\",\"age\":33}";
+           JSONObject jsonObject= JSON.parseObject(jsonStr);
+            System.out.println(jsonObject.keySet());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 //        try {
-//            Response response= HttpClient.RequestSync("localhost:16671",HttpMethod.POST,"asdfljasldf");
+//            HttpResponse response= HttpClient.RequestSync("localhost:16671",HttpMethod.POST,"asdfljasldf");
 //            System.out.println(response.getBodaStr());
 //        } catch (Exception e) {
 //            e.printStackTrace();
@@ -34,12 +40,12 @@ public class Test {
 //
 //        HttpClient.RequestPOST("localhost:16671", "abacvasdfasewrjowriuwo", new onCallbackListener() {
 //            @Override
-//            public void onError(Response response, Exception e) {
+//            public void onError(HttpResponse response, Exception e) {
 //                e.printStackTrace();
 //            }
 //
 //            @Override
-//            public void onSuccess(Response response) {
+//            public void onSuccess(HttpResponse response) {
 //                System.out.println(response.getBodaStr());
 //            }
 //        });

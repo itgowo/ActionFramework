@@ -7,7 +7,7 @@ package com.itgowo.servercore.httpclient;
  * WebSite: http://itgowo.com
  * QQ:1264957104
  */
-public class Response {
+public class HttpResponse {
     private boolean isSuccess = true;
     private byte[] body;
     private String request;
@@ -17,7 +17,7 @@ public class Response {
         return isSuccess;
     }
 
-    public Response setSuccess(boolean success) {
+    public HttpResponse setSuccess(boolean success) {
         isSuccess = success;
         return this;
     }
@@ -30,7 +30,7 @@ public class Response {
         return body == null ? "" : new String(body);
     }
 
-    public Response setBody(byte[] body) {
+    public HttpResponse setBody(byte[] body) {
         this.body = body;
         return this;
     }
@@ -39,7 +39,7 @@ public class Response {
         return request;
     }
 
-    public Response setRequest(String request) {
+    public HttpResponse setRequest(String request) {
         this.request = request;
         return this;
     }
@@ -48,7 +48,7 @@ public class Response {
         return method;
     }
 
-    public Response setMethod(String method) {
+    public HttpResponse setMethod(String method) {
         this.method = method;
         return this;
     }

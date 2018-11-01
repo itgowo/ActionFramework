@@ -7,18 +7,24 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
-public class RequestClientSync implements Callable<Response> {
+public class RequestClientSync implements Callable<HttpResponse> {
     private URL url;
     private String reqestStr;
     private String requestMethod = "POST";
     private int timeout = 15000;
+    private Map<String,String> headers=new HashMap<>();
 
-    public RequestClientSync(String url, String method, int timeout, String reqestStr) throws MalformedURLException {
+    public RequestClientSync(String url, String method, Map<String,String> headers, int timeout, String reqestStr) throws MalformedURLException {
         this.reqestStr = reqestStr;
         this.requestMethod = method;
         this.timeout = timeout;
+        if (headers!=null){
+            this.headers.putAll(headers);
+        }
         if (url != null) {
             if (!url.startsWith("http://") & !url.startsWith("https://")) {
                 url = "http://" + url;
@@ -29,10 +35,10 @@ public class RequestClientSync implements Callable<Response> {
     }
 
     @Override
-    public Response call() throws Exception {
+    public HttpResponse call() throws Exception {
         HttpURLConnection httpConn = null;
         httpConn = (HttpURLConnection) url.openConnection();
-        Response response = new Response();
+        HttpResponse response = new HttpResponse();
         //设置参数
         httpConn.setDoOutput(true);     //需要输出
         httpConn.setDoInput(true);      //需要输入
@@ -44,6 +50,10 @@ public class RequestClientSync implements Callable<Response> {
         httpConn.setRequestProperty("Content-Type", "application/json");
         httpConn.setRequestProperty("Connection", "Keep-Alive");// 维持长连接
         httpConn.setRequestProperty("Charset", "UTF-8");
+
+        for (Map.Entry<String, String> header : this.headers.entrySet()) {
+            httpConn.setRequestProperty(header.getKey(),header.getValue());
+        }
 
         //连接,也可以不用明文connect，使用下面的httpConn.getOutputStream()会自动connect
         httpConn.connect();
@@ -63,9 +73,6 @@ public class RequestClientSync implements Callable<Response> {
         while ((count = inputStream.read(bytes)) != -1) {
             outputStream.write(bytes, 0, count);
         }
-        if (HttpURLConnection.HTTP_OK == resultCode) {
-            return response.setBody(outputStream.toByteArray()).setRequest(reqestStr).setMethod(requestMethod);
-        }
-        throw new Exception("http code:" + resultCode + " http message:" + outputStream.toString());
+        return response.setBody(outputStream.toByteArray()).setRequest(reqestStr).setMethod(requestMethod).setSuccess(HttpURLConnection.HTTP_OK == resultCode);
     }
 }
