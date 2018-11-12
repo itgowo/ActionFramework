@@ -54,6 +54,7 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
             httpRequest = (HttpRequest) msg;
             if (decoder != null) {
                 decoder.cleanFiles();
+                decoder=null;
             }
             decoder = new HttpPostRequestDecoder(factory, httpRequest);
         }
