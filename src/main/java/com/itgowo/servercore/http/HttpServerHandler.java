@@ -6,11 +6,14 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.multipart.*;
 import io.netty.handler.stream.ChunkedFile;
 
 import javax.activation.MimetypesFileTypeMap;
 import java.io.*;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,22 +24,23 @@ import java.util.Map;
 public class HttpServerHandler implements ServerHandler {
     private ChannelHandlerContext ctx;
     private HttpRequest httpRequest;
-    private HttpResponse httpResponse;
     private ByteBuf body;
     private String path;
     private String uri;
-    private Map<String, String> parameters=new HashMap<>();
+    private boolean isMultipart = false;
+    private Map<String, String> parameters = new HashMap<>();
     private HttpHeaders responseHeader = new DefaultHttpHeaders();
+    private List<File> fileUploads = new ArrayList<>();
 
     public void addHeaderToResponse(String key, String value) {
         responseHeader.add(key, value);
     }
 
 
-    public HttpServerHandler(ChannelHandlerContext ctx, HttpRequest httpRequest, HttpResponse httpResponse, ByteBuf body) {
+    public HttpServerHandler(ChannelHandlerContext ctx, HttpRequest httpRequest, ByteBuf body, HttpPostRequestDecoder decoder, String webRootDir) {
         this.ctx = ctx;
         this.httpRequest = httpRequest;
-        this.httpResponse = httpResponse;
+
         this.body = body;
         if (httpRequest != null) {
             QueryStringDecoder decoderQuery = new QueryStringDecoder(this.httpRequest.uri());
@@ -50,6 +54,38 @@ public class HttpServerHandler implements ServerHandler {
             path = decoderQuery.path().replaceFirst("/", "");
             uri = decoderQuery.uri();
         }
+
+
+        if (decoder != null && decoder.isMultipart()) {
+            isMultipart = true;
+            for (InterfaceHttpData httpData : decoder.getBodyHttpDatas()) {
+                try {
+                    if (httpData.retain() instanceof FileUpload){
+                    FileUpload fileUpload = (FileUpload) httpData.retain();
+                    if (fileUpload.isInMemory()) {
+                        File file = new File(webRootDir, "upload");
+                        file.mkdirs();
+                        file = new File(file, fileUpload.getFilename());
+                        FileChannel fileChannel = null;
+                        fileChannel = new FileOutputStream(file).getChannel();
+                        fileChannel.write(fileUpload.content().nioBuffer());
+                        fileChannel.force(true);
+                        fileChannel.close();
+                        fileUploads.add(file);
+                    } else {
+                        File file = fileUpload.getFile();
+                        File fileto = new File(file.getParent(), fileUpload.getFilename());
+                        boolean r = file.renameTo(fileto);
+                        fileUploads.add(file);
+                    }}else {
+                        MixedAttribute attribute= (MixedAttribute) httpData.retain();
+                        parameters.put(attribute.getName(),attribute.getValue());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
@@ -60,7 +96,7 @@ public class HttpServerHandler implements ServerHandler {
                 .append("\r\npath='").append(path + '\'')
                 .append("\r\nuri='" + uri + '\'')
                 .append("\r\nparameters=" + parameters)
-                .append(httpResponse == null ? "" : "\r\nhttpResponse=" + httpResponse.toString())
+                .append("\r\nfileUploads=" + fileUploads)
                 .append(httpRequest == null || httpRequest.headers() == null || httpRequest.headers().entries() == null
                         ? "" : "\r\nmHeaders=" + httpRequest.headers().entries())
                 .append("\r\nbody='" + getBody(null) + '\'' + "\r\n}");
@@ -72,12 +108,17 @@ public class HttpServerHandler implements ServerHandler {
         return this;
     }
 
-    public HttpResponse getHttpResponse() {
-        return httpResponse;
-    }
-
     public ChannelHandlerContext getCtx() {
         return ctx;
+    }
+
+    public List<File> getFileUploads() {
+        return fileUploads;
+    }
+
+    public HttpServerHandler setFileUploads(List<File> fileUploads) {
+        this.fileUploads = fileUploads;
+        return this;
     }
 
     public HttpRequest getHttpRequest() {
@@ -163,13 +204,13 @@ public class HttpServerHandler implements ServerHandler {
     /**
      * 返回OPTIONNS请求，默认允许所有
      */
-    public void sendOptionsResult(){
-        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.FOUND);
+    public void sendOptionsResult() {
+        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         response.headers().add(responseHeader);
-        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS,"*");
-        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS,"*");
+        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_METHODS, "*");
+        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS, "*");
         response.headers().add(HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN, "*");
-        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE,"Origin, 3600");
+        response.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "Origin, 3600");
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
@@ -206,5 +247,9 @@ public class HttpServerHandler implements ServerHandler {
         ctx.write(new ChunkedFile(randomAccessFile, 0, fileLength, 8192), ctx.newProgressivePromise());
         ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
 
+    }
+
+    public boolean isMultipart() {
+        return isMultipart;
     }
 }

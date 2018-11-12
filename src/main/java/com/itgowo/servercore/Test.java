@@ -1,16 +1,15 @@
 package com.itgowo.servercore;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.itgowo.servercore.socket.client.DemoClient;
-import io.netty.handler.codec.http.HttpHeaderValues;
+import com.itgowo.servercore.httpclient.HttpClient;
+import com.itgowo.servercore.httpclient.HttpResponse;
+import com.itgowo.servercore.httpclient.onCallbackListener;
 
 public class Test {
     public static void main(String[] args) {
 
 
         try {
-//            SimpleServer.testSocketServer();
+            SimpleServer.testHttpServer();
 //            HttpClient.get("http://stzb.163.com/herolist/100006.html",null, new WebSocketServerHandler.onReceiveHandlerListener() {
 //                @Override
 //                public void onReceiveHandler(WebSocketServerHandler handler) {
@@ -23,10 +22,10 @@ public class Test {
 //                }
 //            });
 //            SimpleServer.testHttpServer();
-            DemoClient.main(null);
-            String jsonStr="{\"name\":\"小王\",\"age\":33}";
-           JSONObject jsonObject= JSON.parseObject(jsonStr);
-            System.out.println(jsonObject.keySet());
+//            DemoClient.main(null);
+//            String jsonStr="{\"name\":\"小王\",\"age\":33}";
+//           JSONObject jsonObject= JSON.parseObject(jsonStr);
+//            System.out.println(jsonObject.keySet());
         } catch (Exception e) {
             e.printStackTrace();
         }

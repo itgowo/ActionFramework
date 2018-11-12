@@ -13,16 +13,16 @@ public class RequestClient implements Runnable {
     private String requestMethod = "POST";
     private onCallbackListener listener;
     private int timeout = 15000;
-    private Map<String,String> headers=new HashMap<>();
+    private Map<String, String> headers = new HashMap<>();
     private HttpResponse response = new HttpResponse();
 
-    public RequestClient(String url, String method, Map<String,String> headers, String reqestStr, int timeout, onCallbackListener listener) {
+    public RequestClient(String url, String method, Map<String, String> headers, String reqestStr, int timeout, onCallbackListener listener) {
         this.listener = listener;
-        this.reqestStr = reqestStr;
+        this.reqestStr = reqestStr == null ? "" : reqestStr;
         this.requestMethod = method;
         response.setMethod(requestMethod);
         this.timeout = timeout;
-        if (headers!=null){
+        if (headers != null) {
             this.headers.putAll(headers);
         }
         try {
@@ -55,17 +55,18 @@ public class RequestClient implements Runnable {
             httpConn.setRequestProperty("Charset", "UTF-8");
 
             for (Map.Entry<String, String> header : this.headers.entrySet()) {
-                httpConn.setRequestProperty(header.getKey(),header.getValue());
+                httpConn.setRequestProperty(header.getKey(), header.getValue());
             }
 
             //连接,也可以不用明文connect，使用下面的httpConn.getOutputStream()会自动connect
             httpConn.connect();
-
+            BufferedWriter bos = null;
             //建立输入流，向指向的URL传入参数
-            BufferedWriter bos = new BufferedWriter(new OutputStreamWriter(httpConn.getOutputStream()));
-            bos.write(reqestStr);
-            bos.flush();
-            bos.close();
+            if (!reqestStr.equals("")) {
+                bos = new BufferedWriter(new OutputStreamWriter(httpConn.getOutputStream()));
+                bos.write(reqestStr);
+                bos.flush();
+            }
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             InputStream inputStream = httpConn.getInputStream();
@@ -82,6 +83,9 @@ public class RequestClient implements Runnable {
                 onSuccess(response);
             } else {
                 onError(response.setSuccess(false), new Exception("http code:" + resultCode));
+            }
+            if (bos != null) {
+                bos.close();
             }
         } catch (IOException e) {
             onError(response.setSuccess(false), e);

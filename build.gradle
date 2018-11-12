@@ -1,5 +1,5 @@
 group 'itgowo.com'
-version '0.0.60'
+version '0.0.61'
 
 apply plugin: 'java'
 apply plugin: 'com.novoda.bintray-release'//添加
@@ -19,7 +19,6 @@ buildscript {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.itgowo:MiniHttpServer:0.0.3'
 }
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
@@ -29,7 +28,7 @@ publish {
     userOrg = 'itgowo'
     groupId = 'com.itgowo'
     artifactId = 'ActionFramework'
-    publishVersion = '0.0.60'
+    publishVersion = '0.0.61'
     desc = 'A framework that supports the http, socket, and websocket protocols, and includes a set of frameworks that implement actions'
     website = 'https://github.com/itgowo/ActionFramework'
 }

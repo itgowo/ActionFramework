@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class ServerManager {
     private static ExecutorService executorService = new ThreadPoolExecutor(1, 200, 1, TimeUnit.MINUTES, new LinkedBlockingDeque<>());
     private static ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(0);
-    private static HttpServerManager httpServerManager = new HttpServerManager();
+    private static HttpServerManager httpServerManager = new HttpServerManager("");
     private static onJsonConvertListener onJsonConvertListener ;
     private static Logger log;
     private static HttpServerInitCallback httpServerInitCallback = null;

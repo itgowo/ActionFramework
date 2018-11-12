@@ -11,7 +11,7 @@ import com.itgowo.servercore.utils.LogU;
 import java.util.logging.Level;
 
 public class DemoMain {
-    private static HttpServerManager httpServerManager = new HttpServerManager();
+    private static HttpServerManager httpServerManager = new HttpServerManager("");
     private static Dispatcher dispatcher = new Dispatcher();
 
     public static void main(String[] args) {

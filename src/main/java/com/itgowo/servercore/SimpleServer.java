@@ -13,10 +13,11 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 
 public class SimpleServer {
     public static void testHttpServer() throws Exception {
-        HttpServerManager httpServerManager = new HttpServerManager();
+        HttpServerManager httpServerManager = new HttpServerManager("web");
         httpServerManager.setThreadConfig(2, 4);
         httpServerManager.setOnServerListener(new onServerListener<HttpServerHandler>() {
             @Override
@@ -40,7 +41,7 @@ public class SimpleServer {
 //                handler.sendFile(new File("/Users/lujianchao/GitDemo/RemoteDataController/RemoteDataControllerServer/web/"+path),true);
 
                 try {
-                    handler.sendData("我收到了", false);
+                    handler.sendData("ok"+handler.getUri(), false);
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
