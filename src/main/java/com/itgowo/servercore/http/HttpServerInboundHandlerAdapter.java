@@ -67,7 +67,7 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
             if (onServerListener != null) {
                 if (ctx != null) {
                     try {
-                        onServerListener.onReceiveHandler(new HttpServerHandler(ctx, fullHttpRequest, fullHttpRequest.content(), decoder, webRootDir));
+                        onServerListener.onReceiveHandler(new HttpServerHandler(ctx, fullHttpRequest, byteBuf, decoder, webRootDir));
                     } catch (Exception e) {
                         onServerListener.onError(e);
                     }
