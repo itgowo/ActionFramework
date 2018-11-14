@@ -9,11 +9,11 @@ import com.itgowo.servercore.socket.SocketServerManager;
 import com.itgowo.servercore.websocket.WebSocketServerHandler;
 import com.itgowo.servercore.websocket.WebSocketServerManager;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 
 public class SimpleServer {
     public static void testHttpServer() throws Exception {
@@ -31,19 +31,24 @@ public class SimpleServer {
             }
 
             @Override
-            public void onReceiveHandler(HttpServerHandler handler)throws Exception {
-                System.out.println(handler);
+            public void onReceiveHandler(HttpServerHandler handler) throws Exception {
+//                System.out.println(handler);
 //                handler.sendRedirect("http://baidu.com");
-                String path=handler.getPath();
-//                if (path.equalsIgnoreCase("")){
-//                    path="index.html";
-//                }
-//                handler.sendFile(new File("/Users/lujianchao/GitDemo/RemoteDataController/RemoteDataControllerServer/web/"+path),true);
-
-                try {
-                    handler.sendData("ok"+handler.getUri(), false);
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                String path = handler.getPath();
+                if (handler.getHttpRequest().method() == HttpMethod.OPTIONS) {
+                    handler.sendOptionsResult();
+                } else if (handler.getHttpRequest().method() == HttpMethod.GET) {
+                    if (path.equalsIgnoreCase("")) {
+                        path = "index.html";
+                    }
+                    handler.sendFile(new File("/Users/lujianchao/WebstormProjects/untitled1" , path), true);
+                } else {
+                    try {
+                        Thread.sleep(1000);
+                        handler.sendData("ok" + handler.getUri(), false);
+                    } catch (UnsupportedEncodingException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -131,7 +136,7 @@ public class SimpleServer {
             }
 
             @Override
-            public void onReceiveHandler(WebSocketServerHandler handler) throws Exception{
+            public void onReceiveHandler(WebSocketServerHandler handler) throws Exception {
                 System.out.println("SimpleServer.onReceiveHandler " + handler.toString());
                 handler.sendResponse(new TextWebSocketFrame(handler.getWebSocketFrame().toString()));
             }
@@ -160,6 +165,7 @@ public class SimpleServer {
         manager.prepare(1221);
         manager.start();
     }
+
     public static void testPacgageServer() throws Exception {
         PackageServerManager packageServerManager = new PackageServerManager();
         packageServerManager.setThreadConfig(2, 4);

@@ -22,6 +22,11 @@ import java.util.Map;
  * Created by lujianchao on 2018/5/17.
  */
 public class HttpServerHandler implements ServerHandler {
+    public static final String JSON = "application/json;charset=utf-8";
+    public static final String HTML = "text/html";
+    public static final String JS = "application/javascript";
+    public static final String CSS = "text/css";
+    public static final String OBJECT = "application/octet-stream";
     private ChannelHandlerContext ctx;
     private HttpRequest httpRequest;
     private ByteBuf body;
@@ -76,7 +81,7 @@ public class HttpServerHandler implements ServerHandler {
                         File file = fileUpload.getFile();
                         File fileto = new File(file.getParent(), fileUpload.getFilename());
                         boolean r = file.renameTo(fileto);
-                        fileUploads.add(file);
+                        fileUploads.add(fileto);
                     }}else {
                         MixedAttribute attribute= (MixedAttribute) httpData.retain();
                         parameters.put(attribute.getName(),attribute.getValue());
@@ -213,7 +218,21 @@ public class HttpServerHandler implements ServerHandler {
         response.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "Origin, 3600");
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
-
+    public String getDefaultMimeType(File file) {
+        if (file == null) {
+            return JSON;
+        } else if (file.getName().toLowerCase().endsWith(".html")) {
+            return HTML;
+        } else if (file.getName().toLowerCase().endsWith(".htm")) {
+            return HTML;
+        } else if (file.getName().toLowerCase().endsWith(".js")) {
+            return JS;
+        } else if (file.getName().toLowerCase().endsWith(".css")) {
+            return CSS;
+        } else {
+            return OBJECT;
+        }
+    }
     /**
      * 用http协议返回一个文件
      *
@@ -231,9 +250,11 @@ public class HttpServerHandler implements ServerHandler {
         }
         long fileLength = randomAccessFile.length();
         HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
+        response.headers().add(responseHeader);
         response.headers().add(HttpHeaderNames.CONTENT_LENGTH, fileLength);
-        MimetypesFileTypeMap mimetypesFileTypeMap = new MimetypesFileTypeMap();
-        response.headers().add(HttpHeaderNames.CONTENT_TYPE, mimetypesFileTypeMap.getContentType(file.getPath()));
+        if (!response.headers().contains(HttpHeaderNames.CONTENT_TYPE)) {
+            response.headers().add(HttpHeaderNames.CONTENT_TYPE, getDefaultMimeType(file));
+        }
         boolean isAttachment = true;
         if (autoHtmltoNotAttachment) {
             isAttachment = !(file.getName().endsWith(".html") || file.getName().endsWith(".htm"));
@@ -242,7 +263,7 @@ public class HttpServerHandler implements ServerHandler {
         if (HttpUtil.isKeepAlive(httpRequest)) {
             response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
         }
-        response.headers().add(responseHeader);
+
         ctx.write(response);
         ctx.write(new ChunkedFile(randomAccessFile, 0, fileLength, 8192), ctx.newProgressivePromise());
         ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);

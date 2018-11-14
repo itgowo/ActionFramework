@@ -12,14 +12,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.multipart.*;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.channels.FileChannel;
 
 /**
  * Created by lujianchao onServerListener 2017/3/28.
@@ -27,12 +24,9 @@ import java.nio.channels.FileChannel;
  */
 public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapter {
     private onServerListener onServerListener;
-    private HttpRequest httpRequest;
     private String webRootDir;
-
     private ByteBuf byteBuf = Unpooled.buffer();
-    private static final HttpDataFactory factory =
-            new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE); // Disk if size exceed
+    private static final HttpDataFactory factory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE); // Disk if size exceed
 
     private HttpPostRequestDecoder decoder;
 
@@ -50,20 +44,14 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof HttpRequest) {
-            httpRequest = (HttpRequest) msg;
+        if (msg instanceof FullHttpRequest) {
+            FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
+
             if (decoder != null) {
                 decoder.cleanFiles();
-                decoder=null;
+                decoder = null;
             }
-            decoder = new HttpPostRequestDecoder(factory, httpRequest);
-        }
-        if (httpRequest == null) {
-            ctx.fireChannelRead(msg);
-            return;
-        }
-
-        if (msg instanceof HttpContent) {
+            decoder = new HttpPostRequestDecoder(factory, fullHttpRequest);
             if (decoder.isMultipart()) {
                 try {
                     decoder.offer((HttpContent) msg);
@@ -73,21 +61,20 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
                     return;
                 }
             } else {
-                HttpContent content = (HttpContent) msg;
-                byteBuf.writeBytes(content.content());
-                content.release();
+                byteBuf.writeBytes(fullHttpRequest.content());
+                fullHttpRequest.release();
             }
-        }
-    }
-
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        if (onServerListener != null) {
-            if (ctx != null && httpRequest != null) {
-                onServerListener.onReceiveHandler(new HttpServerHandler(ctx, httpRequest, byteBuf,decoder,webRootDir));
+            if (onServerListener != null) {
+                if (ctx != null) {
+                    try {
+                        onServerListener.onReceiveHandler(new HttpServerHandler(ctx, fullHttpRequest, fullHttpRequest.content(), decoder, webRootDir));
+                    } catch (Exception e) {
+                        onServerListener.onError(e);
+                    }
+                }
             }
+            byteBuf = Unpooled.buffer();
         }
-        byteBuf = Unpooled.buffer();
     }
 
     @Override
