@@ -12,6 +12,7 @@ import java.io.IOException;
  * 呢？遇见好用的自然看不上不太灵活的，于是写了此类解决。
  */
 public class ByteBuffer {
+    public static final int BUFFER_SIZE = 256;
     /**
      * 指针位置，即将读取的位置
      */
@@ -216,6 +217,7 @@ public class ByteBuffer {
 
     /**
      * 读取数据到另一个ByteBuffer
+     *
      * @param b
      * @return
      */
@@ -235,7 +237,7 @@ public class ByteBuffer {
      * @return
      */
     public ByteBuffer writeByte(byte b) {
-        checkWriteLengthAndInit(1);
+        autoExpandCapacity(1);
         data[writerIndex] = b;
         writerIndex++;
         return this;
@@ -249,7 +251,7 @@ public class ByteBuffer {
      * @return
      */
     public ByteBuffer write(int b) {
-        checkWriteLengthAndInit(1);
+        autoExpandCapacity(1);
         data[writerIndex] = (byte) b;
         writerIndex++;
         return this;
@@ -263,7 +265,7 @@ public class ByteBuffer {
      * @return
      */
     public ByteBuffer writeInt(int b) {
-        checkWriteLengthAndInit(4);
+        autoExpandCapacity(4);
         writeBytesToBytes(intToByteArray(b), data, writerIndex);
         writerIndex += 4;
         return this;
@@ -277,7 +279,7 @@ public class ByteBuffer {
      * @return
      */
     public ByteBuffer writeBytes(byte[] b) {
-        checkWriteLengthAndInit(b.length);
+        autoExpandCapacity(b.length);
         writeBytesToBytes(b, data, writerIndex);
         writerIndex += b.length;
         return this;
@@ -290,7 +292,7 @@ public class ByteBuffer {
      * @return
      */
     public ByteBuffer writeBytes(byte[] b, int dataLength) {
-        checkWriteLengthAndInit(b.length);
+        autoExpandCapacity(b.length);
         writeBytesToBytes(b, data, writerIndex, dataLength);
         writerIndex += dataLength;
         return this;
@@ -303,7 +305,7 @@ public class ByteBuffer {
      */
     public ByteBuffer writeBytes(ByteBuffer b) {
         int readableBytes = b.readableBytes();
-        checkWriteLengthAndInit(readableBytes);
+        autoExpandCapacity(readableBytes);
         writeBytesToBytes(b.readableBytesArray(), data, writerIndex);
         b.readerIndex(b.writerIndex);
         writerIndex += readableBytes;
@@ -318,7 +320,7 @@ public class ByteBuffer {
      * @return
      */
     public ByteBuffer writeBytes(ByteBuffer b, int dataLength) {
-        checkWriteLengthAndInit(dataLength);
+        autoExpandCapacity(dataLength);
         writeBytesToBytes(b.readableBytesArray(), data, writerIndex, dataLength);
         b.readerIndex(b.readerIndex + dataLength);
         writerIndex += dataLength;
@@ -326,13 +328,18 @@ public class ByteBuffer {
     }
 
     /**
-     * 检查写入数据长度，如果不够则扩容
+     * 检查写入数据长度，如果不够则扩容,自动扩容,递增值为BUFFER_SIZE的倍数
      *
      * @param addLength
      */
-    private void checkWriteLengthAndInit(int addLength) {
+    private void autoExpandCapacity(int addLength) {
         if (writableBytes() < addLength) {
-            byte[] newBytes = new byte[(data.length + addLength) * 2];
+            int newSize = writableBytes() + addLength;
+            int size = 0;
+            while (size < newSize) {
+                size += BUFFER_SIZE;
+            }
+            byte[] newBytes = new byte[size];
             writeBytesToBytes(data, newBytes, 0);
             data = newBytes;
         }
@@ -401,4 +408,15 @@ public class ByteBuffer {
             super(message);
         }
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ByteBuffer{");
+        sb.append("readerIndex=").append(readerIndex);
+        sb.append(", writerIndex=").append(writerIndex);
+        sb.append(", capacity=").append(data.length);
+        sb.append('}');
+        return sb.toString();
+    }
+
 }

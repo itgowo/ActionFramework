@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * @author lujianchao
  * 包大小长度最小为6
+ * 使用自定义ByteBuffer实现的粘包分包解决方案
  * type 1 byte 消息类型  系统协议
  * length 4 byte 消息包总长度
  * dataType 1 byte 消息数据类型
@@ -68,7 +69,7 @@ public class PackageMessage {
      */
     public static final int LENGTH_HEAD = 10;
     /**
-     * 处理黏包分包
+     * 处理粘包分包
      */
     private PackageMessage pack;
     /**
@@ -186,7 +187,8 @@ public class PackageMessage {
         if (length == 6) {
             ByteBuffer byteBuffer = ByteBuffer.newByteBuffer();
             byteBuffer.writeByte((byte) type)
-                    .writeInt(length);
+                    .writeInt(length)
+                    .writeByte((byte) dataType);
             return byteBuffer;
         }
         if (dataType == 0) {
@@ -211,7 +213,9 @@ public class PackageMessage {
             while (true) {
                 PackageMessage packageMessage = decodePackageMessage(byteBuffer);
                 if (packageMessage != null && packageMessage.isCompleted()) {
-                    packageMessage.getData().readerIndex(0);
+                    if (packageMessage.getData() != null) {
+                        packageMessage.getData().readerIndex(0);
+                    }
                     messageList.add(packageMessage);
                 } else {
                     break;
@@ -368,5 +372,18 @@ public class PackageMessage {
         bytes1[2] = (byte) position;
         bytes1[3] = data.array()[position];
         return byteArrayToInt(bytes1);
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PackageMessage{");
+        sb.append("type=").append(type);
+        sb.append(", length=").append(length);
+        sb.append(", dataType=").append(dataType);
+        sb.append(", dataSign=").append(dataSign);
+        sb.append(", data=").append(data);
+        sb.append(", step=").append(step);
+        sb.append('}');
+        return sb.toString();
     }
 }

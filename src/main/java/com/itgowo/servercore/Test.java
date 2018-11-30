@@ -9,7 +9,7 @@ public class Test {
 
 
         try {
-            SimpleServer.testHttpServer();
+            SimpleServer.testPacgageServer();
 //            HttpClient.get("http://stzb.163.com/herolist/100006.html",null, new WebSocketServerHandler.onReceiveHandlerListener() {
 //                @Override
 //                public void onReceiveHandler(WebSocketServerHandler handler) {

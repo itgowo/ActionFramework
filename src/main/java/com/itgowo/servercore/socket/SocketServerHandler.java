@@ -1,6 +1,8 @@
 package com.itgowo.servercore.socket;
 
 import com.itgowo.servercore.ServerHandler;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 
 /**
@@ -34,7 +36,12 @@ public class SocketServerHandler implements ServerHandler {
     }
 
     public void sendData(byte[] data) {
+        ctx.writeAndFlush(Unpooled.wrappedBuffer(data));
+    }
+    public void sendData(ByteBuf data) {
         ctx.writeAndFlush(data);
     }
-
+    public void sendData(ByteBuffer data) {
+        ctx.writeAndFlush(Unpooled.wrappedBuffer(data.readableBytesArray()));
+    }
 }

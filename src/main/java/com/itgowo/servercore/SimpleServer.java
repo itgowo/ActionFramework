@@ -174,7 +174,7 @@ public class SimpleServer {
             public void onReceiveHandler(PackageServerHandler handler) {
                 System.out.println("收到消息" + handler);
                 System.out.println("发送消息");
-                handler.sendData("啦啦啦".getBytes());
+                handler.sendData(handler.getPackageMessage());
             }
 
             @Override
