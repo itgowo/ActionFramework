@@ -25,10 +25,8 @@ import java.io.File;
 public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapter {
     private onServerListener onServerListener;
     private String webRootDir;
-    private ByteBuf byteBuf = Unpooled.buffer();
-    private static final HttpDataFactory factory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE); // Disk if size exceed
 
-    private HttpPostRequestDecoder decoder;
+    private static final HttpDataFactory factory = new DefaultHttpDataFactory(DefaultHttpDataFactory.MINSIZE); // Disk if size exceed
 
     public HttpServerInboundHandlerAdapter(String webRootDir, onServerListener onServerListener) {
         this.webRootDir = webRootDir;
@@ -45,35 +43,15 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof FullHttpRequest) {
-            FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
-
-            if (decoder != null) {
-                decoder.cleanFiles();
-                decoder = null;
-            }
-            decoder = new HttpPostRequestDecoder(factory, fullHttpRequest);
-            if (decoder.isMultipart()) {
-                try {
-                    decoder.offer((HttpContent) msg);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                    ctx.channel().close();
-                    return;
-                }
-            } else {
-                byteBuf.writeBytes(fullHttpRequest.content());
-                fullHttpRequest.release();
-            }
             if (onServerListener != null) {
                 if (ctx != null) {
                     try {
-                        onServerListener.onReceiveHandler(new HttpServerHandler(ctx, fullHttpRequest, byteBuf, decoder, webRootDir));
+                        onServerListener.onReceiveHandler(new HttpServerHandler(ctx, (FullHttpRequest) msg, factory,  webRootDir));
                     } catch (Exception e) {
                         onServerListener.onError(e);
                     }
                 }
             }
-            byteBuf = Unpooled.buffer();
         }
     }
 
@@ -84,5 +62,4 @@ public class HttpServerInboundHandlerAdapter extends ChannelInboundHandlerAdapte
         }
         ctx.close();
     }
-
 }

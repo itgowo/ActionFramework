@@ -4,7 +4,6 @@ import com.itgowo.actionframework.ServerManager;
 import com.itgowo.actionframework.classutils.ClassEntry;
 import com.itgowo.actionframework.classutils.ClassUtils;
 import com.itgowo.actionframework.utils.Utils;
-import com.itgowo.actionframework.utils.WatchFileService;
 import com.itgowo.servercore.http.HttpServerHandler;
 import com.itgowo.servercore.onServerListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,48 +13,46 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author lujianchao
  * 请求事件处理类
  */
-public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFileService.onWatchFileListener {
+public class Dispatcher implements onServerListener<HttpServerHandler> {
     public static float tps;
-    public static AtomicLong tpsTime = new AtomicLong();
-    public static AtomicLong tpsCount = new AtomicLong();
+    public static long tpsTime;
+    public static long tpsCount;
     public static ScheduledFuture scheduledFuture;
-    private HashMap<String, ConcurrentHashMap<String, ActionRequest>> actionList = new HashMap();
+    /**
+     * 外层Path，中间method，最内层PostAction
+     */
+    private HashMap<String, HashMap<String, HashMap<String, ActionRequest>>> actionList = new HashMap();
 
     private HashMap<String, String> actionPath = new HashMap<>();
     private onDispatcherListener dispatcherListener;
-    private WatchFileService watchFileService;
-    private boolean isValidSign = true;
-    private volatile AtomicBoolean isHotLoading = new AtomicBoolean(false);
+    private volatile boolean isHotLoading = false;
     private StringBuilder stringBuilder;
-    /**
-     * 是否校验时差,BaseRequest中复写对应实现方法
-     */
-    private boolean isValidTimeDifference = true;
-    /**
-     * 是否触发参数校验方法，BaseRequest中复写对应实现方法
-     */
-    private boolean isValidParameter = true;
-    /**
-     * 服务端与客户端时间差，BaseRequest中复写对应实现方法
-     */
-    private long serverClientTimeDifference = 60000;
+    private String rootPath = "";
 
     public void startAnalysisTps() {
         AnalysisTps();
+    }
+
+    public String getRootPath() {
+        return rootPath;
+    }
+
+    public Dispatcher setRootPath(String rootPath) {
+        if (!rootPath.startsWith("/")) {
+            rootPath = "/" + rootPath;
+        }
+        this.rootPath = rootPath;
+        return this;
     }
 
     public void stopAnalysisTps() {
@@ -64,52 +61,6 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
         }
     }
 
-    /**
-     * 设置是否校验签名
-     *
-     * @param validSign
-     * @return
-     */
-    public Dispatcher setValidSign(boolean validSign) {
-        isValidSign = validSign;
-        return this;
-    }
-
-    public Dispatcher setJsonConvertListener(onJsonConvertListener jsonConvertListener) {
-        ServerManager.setOnJsonConvertListener(jsonConvertListener);
-        return this;
-    }
-
-    public Dispatcher setValidParameter(boolean validParameter) {
-        isValidParameter = validParameter;
-        return this;
-    }
-
-    /**
-     * 停止外部目录变更监听，默认关闭动态更新
-     *
-     * @return
-     */
-    public Dispatcher stopWatchAction() {
-        if (watchFileService != null) {
-            watchFileService.stopWatch();
-            watchFileService = null;
-        }
-        return this;
-    }
-
-    /**
-     * 开始外部目录变更监听，默认关闭动态更新
-     *
-     * @return
-     */
-    public Dispatcher startWatchAction() {
-        if (watchFileService == null) {
-            watchFileService = new WatchFileService(BaseConfig.getServerDynamicActionDir());
-            watchFileService.startWatch(this);
-        }
-        return this;
-    }
 
     /**
      * 手动调用扫描功能，自动检查指定包路径并添加到dispatch中
@@ -143,10 +94,6 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
             File dynamicDir = new File(BaseConfig.getServerDynamicActionDir());
             List<ClassEntry> dynamicClass = ClassUtils.getClassList(dynamicDir.getAbsolutePath(), packagePath);
             classes.addAll(dynamicClass);
-            if (BaseConfig.getServerAutoWatchAction()) {
-                watchFileService = new WatchFileService(dynamicDir.getAbsolutePath());
-                watchFileService.startWatch(this);
-            }
         }
         return classes;
     }
@@ -206,46 +153,27 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
         }
         try {
             if (o instanceof ActionRequest) {
-                Object action = Utils.getFinalFieldValueByName("ACTION", c);
-                Object method = Utils.getFinalFieldValueByName("METHOD", c);
-                if (action != null && method != null && action instanceof String && method instanceof String) {
-                    String[] actions = ((String) action).split(";");
-                    String[] methods = ((String) method).split(";");
-                    if (methods != null && actions != null) {
-                        for (int i = 0; i < methods.length; i++) {
-                            for (int j = 0; j < actions.length; j++) {
-                                registerAction(methods[i], actions[j], (ActionRequest) o, classEntry.getFilePath());
-                            }
-                        }
+                Object filter1 = Utils.getFieldValueByName("filterList", o);
+                if (filter1 instanceof List) {
+                    List<ActionRequest.Filter> filterList = (List<ActionRequest.Filter>) filter1;
+                    if (filterList == null || filterList.isEmpty()) {
+                        return;
                     }
+                    for (int i = 0; i < filterList.size(); i++) {
+                        if (filterList.get(i).method == null) {
+                            continue;
+                        }
+                        registerAction(filterList.get(i), (ActionRequest) o, classEntry.getFilePath());
+                    }
+
                 }
+
             }
         } catch (Exception e) {
             ServerManager.getLogger().warning(e.getLocalizedMessage());
         }
     }
 
-    /**
-     * 设置校验时差间隔，如果服务端和客户端时差较大，则会失败
-     *
-     * @param serverClientTimeDifference
-     * @return
-     */
-    public Dispatcher setServerClientTimeDifference(long serverClientTimeDifference) {
-        this.serverClientTimeDifference = serverClientTimeDifference;
-        return this;
-    }
-
-    /**
-     * 设置是否校验时差，如果服务端和客户端时差较大，则会失败
-     *
-     * @param validTimeDifference
-     * @return
-     */
-    public Dispatcher setValidTimeDifference(boolean validTimeDifference) {
-        isValidTimeDifference = validTimeDifference;
-        return this;
-    }
 
     /**
      * 注册Action
@@ -253,16 +181,50 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
      * @param actionRequest
      * @return
      */
-    public Dispatcher registerAction(String method, String action, ActionRequest actionRequest, String filePath) {
-        ConcurrentHashMap<String, ActionRequest> actionHashMap = actionList.get(method);
-        if (actionHashMap == null) {
-            actionHashMap = new ConcurrentHashMap<>();
-            actionList.put(method, actionHashMap);
+    public Dispatcher registerAction(ActionRequest.Filter filter, ActionRequest actionRequest, String filePath) {
+
+        if (filter.path == null) {
+            filter.path = "/";
+        }
+        HashMap<String, HashMap<String, ActionRequest>> methodlist;
+        if (actionList.containsKey(filter.path)) {
+            methodlist = actionList.get(filter.path);
+        } else {
+            methodlist = new HashMap<>();
+            if (!filter.path.startsWith("/") && filter.path.length() > 1) {
+                filter.path = "/" + filter.path;
+            }
+            if (filter.path.endsWith("/")) {
+                filter.path = filter.path.substring(0, filter.path.length() - 1);
+            }
+            if (rootPath != null) {
+                if (rootPath.endsWith("/")) {
+                    filter.path = rootPath.substring(0, rootPath.length() - 1) + filter.path;
+                } else {
+                    filter.path = rootPath + filter.path;
+                }
+            }
+            actionList.put(filter.path, methodlist);
         }
 
-        actionHashMap.put(action, actionRequest);
-        actionPath.put(filePath, action);
-        stringBuilder.append("HttpMethod:" + method + "  Action:" + action + " \t Class:" + actionRequest.getClass().getName() + "\r\n");
+        HashMap<String, ActionRequest> actions;
+
+        if (methodlist.containsKey(filter.method)) {
+            actions = methodlist.get(filter.method);
+        } else {
+            actions = new HashMap<>();
+            methodlist.put(filter.method, actions);
+        }
+        if (filter.postAction == null) {
+            actions.put("", actionRequest);
+        } else {
+            actions.put(filter.postAction, actionRequest);
+        }
+
+
+        actionPath.put(filePath, filter.toString());
+        stringBuilder.append("Path:" + filter.path + "  HttpMethod:" + filter.method + "  Action:" + filter.postAction + " \t Class:" + actionRequest.getClass().getName() + "\r\n");
+        System.out.println(actionList.toString());
         return this;
     }
 
@@ -274,11 +236,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
      */
     public Dispatcher unRegisterAction(String key) {
         for (String s : actionList.keySet()) {
-            ConcurrentHashMap concurrentHashMap = actionList.get(s);
-            if (concurrentHashMap != null) {
-                concurrentHashMap.remove(key);
-                ServerManager.getLogger().info("Dispatcher.unRegisterAction " + key);
-            }
+            ServerManager.getLogger().info("Dispatcher.unRegisterAction " + key);
         }
         return this;
     }
@@ -299,10 +257,10 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
      * @return
      */
     public Dispatcher clearActionByMethod(String method) {
-        ConcurrentHashMap concurrentHashMap = actionList.get(method);
-        if (concurrentHashMap != null) {
-            concurrentHashMap.clear();
-        }
+//        ConcurrentHashMap concurrentHashMap = actionList.get(method);
+//        if (concurrentHashMap != null) {
+//            concurrentHashMap.clear();
+//        }
         return this;
     }
 
@@ -319,8 +277,15 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
     @Override
     public void onReceiveHandler(HttpServerHandler handler) {
         if (handler != null) {
+            while (isHotLoading) {
+                try {
+                    handler.wait(30);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
             onDispatch(handler);
-            if (scheduledFuture != null) tpsCount.addAndGet(1);
+            if (scheduledFuture != null) tpsCount++;
         }
     }
 
@@ -337,16 +302,16 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
             @Override
             public void run() {
                 long time;
-                if (tpsTime.get() == 0) {
-                    tpsTime.set(System.nanoTime());
+                if (tpsTime == 0) {
+                    tpsTime = System.nanoTime();
                 } else {
-                    time = System.nanoTime() - tpsTime.get();
-                    tps = ((tpsCount.get() * 1000000000f / time));
-                    tpsTime.set(System.nanoTime());
-                    tpsCount.set(0);
+                    time = System.nanoTime() - tpsTime;
+                    tps = ((tpsCount * 1000000000f / time));
+                    tpsTime = System.nanoTime();
+                    tpsCount = 0;
                 }
             }
-        }, 2, 5, TimeUnit.SECONDS);
+        }, 5, 5, TimeUnit.SECONDS);
     }
 
     /**
@@ -355,7 +320,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
      * @param isHotLoading
      */
     private void setLoadActionStatus(boolean isHotLoading) {
-        this.isHotLoading.set(isHotLoading);
+        this.isHotLoading = isHotLoading;
     }
 
     @Override
@@ -385,6 +350,18 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
         return this;
     }
 
+    private ActionRequest findAction(String path, String method, String action) {
+        ActionRequest actionRequest = null;
+        HashMap<String, HashMap<String, ActionRequest>> pathMap = actionList.get(path);
+        if (pathMap != null) {
+            HashMap<String, ActionRequest> methodMap = pathMap.get(method);
+            if (methodMap != null) {
+                actionRequest = methodMap.get(action == null ? "" : action);
+            }
+        }
+        return actionRequest;
+    }
+
     public void onDispatch(HttpServerHandler handler) {
         if (handler.getHttpRequest() != null && handler.getHttpRequest().method() != null) {
             if (dispatcherListener != null && dispatcherListener.interrupt(handler)) {
@@ -395,189 +372,67 @@ public class Dispatcher implements onServerListener<HttpServerHandler>, WatchFil
                 }
                 return;
             }
-            HttpMethod method = handler.getHttpRequest().method();
-            if (method == HttpMethod.POST) {
-                doPost(handler);
-            } else {
-                doOther(handler);
+            String path = "/";
+            if (!"/".equals(handler.getPath())) {
+                path = handler.getPath();
+            }
+            String action = null;
+            BaseRequest baseRequest = null;
+            if (handler.getHttpRequest().method().equals(HttpMethod.POST)) {
+                try {
+                    String body = handler.getBody(null);
+                    baseRequest = ServerManager.getOnJsonConvertListener().parseJson(body);
+                    action = baseRequest.action;
+                } catch (Exception e) {
+                    try {
+                        handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求无法处理，数据解析错误"), true);
+                    } catch (UnsupportedEncodingException f) {
+                        ServerManager.getLogger().warning(f.getLocalizedMessage());
+                        if (dispatcherListener != null) {
+                            dispatcherListener.onDispatcherError(f);
+                        }
+                    }
+                    return;
+                }
+            }
+            ActionRequest actionRequest = findAction(path, handler.getHttpRequest().method().name(), action);
+            try {
+                if (actionRequest == null) {
+                    try {
+                        handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求无法处理，未找到对应处理器"), true);
+                    } catch (UnsupportedEncodingException f) {
+                        ServerManager.getLogger().warning(f.getLocalizedMessage());
+                        if (dispatcherListener != null) {
+                            dispatcherListener.onDispatcherError(f);
+                        }
+                    }
+                    return;
+                }
+                actionRequest.doAction(handler, baseRequest);
+            } catch (Exception e) {
+                try {
+                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求无法处理，数据解析错误"), true);
+                } catch (UnsupportedEncodingException f) {
+                    ServerManager.getLogger().warning(f.getLocalizedMessage());
+                    if (dispatcherListener != null) {
+                        dispatcherListener.onDispatcherError(f);
+                    }
+                }
+                return;
             }
         } else {
             try {
                 handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求无法处理，数据错误"), true);
             } catch (UnsupportedEncodingException e) {
                 ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-            return;
-        }
-    }
-
-    private void doOther(HttpServerHandler handler) {
-        while (isHotLoading.get()) {
-            try {
-                this.wait(5);
-            } catch (InterruptedException e) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-        }
-        String path = handler.getPath();
-        ConcurrentHashMap<String, ActionRequest> concurrentHashMap = actionList.get(handler.getHttpRequest().method().name());
-        if (concurrentHashMap == null) {
-            try {
-                if (!dispatcherListener.onNotFoundAction(handler, path)) {
-                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
+                if (dispatcherListener != null) {
+                    dispatcherListener.onDispatcherError(e);
                 }
-                return;
-            } catch (Exception e) {
-                ServerManager.getLogger().severe(e.getLocalizedMessage());
-            }
-        }
-        ActionRequest actionRequest = concurrentHashMap.get(path);
-        try {
-            if (actionRequest == null) {
-                if (!dispatcherListener.onNotFoundAction(handler, path)) {
-                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
-                }
-                return;
-            }
-            actionRequest.doAction(handler, null);
-        } catch (Exception e) {
-            ServerManager.getLogger().severe(e.getLocalizedMessage());
-            try {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("业务处理异常").setError(e.getMessage()), true);
-            } catch (UnsupportedEncodingException e1) {
-                ServerManager.getLogger().warning(e1.getLocalizedMessage());
-            }
-        }
-    }
-
-    /**
-     * 主要是针对post方式处理业务的，所以单独提出来，做了很多处理
-     *
-     * @param handler
-     */
-    private void doPost(HttpServerHandler handler) {
-        BaseRequest baseRequest = null;
-        if (dispatcherListener != null) {
-            try {
-                baseRequest = ServerManager.getOnJsonConvertListener().parseJson(handler.getBody(Charset.forName("utf-8")));
-            } catch (Exception e) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-        }
-        if (baseRequest == null) {
-            try {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求解析失败"), true);
-            } catch (UnsupportedEncodingException e) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
             }
             return;
         }
-        if (isValidTimeDifference && !baseRequest.validTimeDifference(serverClientTimeDifference)) {
-            try {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("时间校验失败"), true);
-            } catch (UnsupportedEncodingException e) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-            return;
-        }
-        if (isValidParameter && !baseRequest.validParameter()) {
-            try {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("参数校验失败"), true);
-            } catch (UnsupportedEncodingException e) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-            return;
-        }
-        if (isValidSign && !baseRequest.validSign()) {
-            try {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("签名校验失败"), true);
-            } catch (UnsupportedEncodingException e) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-            return;
-        }
-        while (isHotLoading.get()) {
-            try {
-                this.wait(5);
-            } catch (InterruptedException e) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-        }
-        ConcurrentHashMap<String, ActionRequest> concurrentHashMap = actionList.get(HttpMethod.POST.name());
-        if (concurrentHashMap == null) {
-            try {
-                if (!dispatcherListener.onNotFoundAction(handler, baseRequest.getAction())) {
-                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
-                }
-                return;
-            } catch (Exception e) {
-                ServerManager.getLogger().severe(e.getLocalizedMessage());
-            }
-        }
-        ActionRequest actionRequest = concurrentHashMap.get(baseRequest.getAction());
-        try {
-            if (actionRequest == null) {
-                if (!dispatcherListener.onNotFoundAction(handler, baseRequest.getAction())) {
-                    handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("未找到对应接口功能，请检查版本，如有问题请联系管理员"), true);
-                }
-                return;
-            }
-            actionRequest.doAction(handler, baseRequest);
-        } catch (Exception e) {
-            ServerManager.getLogger().severe(e.getLocalizedMessage());
-            try {
-                handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("业务处理异常").setError(e.getMessage()), true);
-            } catch (UnsupportedEncodingException e1) {
-                ServerManager.getLogger().warning(e.getLocalizedMessage());
-            }
-        }
     }
 
-    @Override
-    public void onCreateFile(String dir, String fileName) {
-        ServerManager.getLogger().info("HotLoad:------registerAction");
-        File file = new File(dir + File.separator + fileName);
-        List<String> stringList = BaseConfig.getServerActionPackageList();
-        List<ClassEntry> classEntries = new ArrayList<>();
-        for (int i = 0; i < stringList.size(); i++) {
-            classEntries.addAll(loadClass(file, stringList));
-        }
-        setLoadActionStatus(true);
-        for (int i = 0; i < classEntries.size(); i++) {
-            checkAndRegisterAction(classEntries.get(i));
-        }
-        setLoadActionStatus(false);
-        ServerManager.getLogger().info("HotLoad:------\r\n");
-    }
-
-    @Override
-    public void onModifyFile(String dir, String fileName) {
-        File file = new File(dir + File.separator + fileName);
-        List<String> stringList = BaseConfig.getServerActionPackageList();
-        List<ClassEntry> classEntries = new ArrayList<>();
-        for (int i = 0; i < stringList.size(); i++) {
-            classEntries.addAll(loadClass(file, stringList));
-        }
-        ServerManager.getLogger().info("HotLoad:------registerAction");
-        setLoadActionStatus(true);
-        for (int i = 0; i < classEntries.size(); i++) {
-            checkAndRegisterAction(classEntries.get(i));
-        }
-        setLoadActionStatus(false);
-        ServerManager.getLogger().info("HotLoad:------\r\n");
-    }
-
-    @Override
-    public void onDeleteFile(String dir, String fileName) {
-        String f = actionPath.get(dir + File.separator + fileName);
-        if (f != null) {
-            ServerManager.getLogger().info("HotLoad:------unRegisterAction");
-            setLoadActionStatus(true);
-            unRegisterAction(f);
-            setLoadActionStatus(false);
-            ServerManager.getLogger().info("HotLoad:------\r\n");
-        }
-    }
 
     public interface onDispatcherListener {
 

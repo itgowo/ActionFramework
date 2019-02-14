@@ -6,14 +6,21 @@ import com.itgowo.actionframework.base.BaseRequest;
 import com.itgowo.actionframework.base.ServerJsonEntity;
 import com.itgowo.actionframework.utils.SystemInfo;
 
-public class ActionServerStatus implements ActionRequest {
-    public static final String ACTION = "ServerStatus";
-    public static final String METHOD = "POST";
+import java.util.ArrayList;
+import java.util.List;
 
+public class ActionServerStatus extends ActionRequest {
     @Override
     public void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception {
         ServerJsonEntity entity = new ServerJsonEntity();
         entity.setData(new SystemInfo());
         handler.sendData(entity, true);
     }
+
+    @Override
+    public void getFilter(List<Filter> filterList) {
+        filterList.add(new Filter("POST","ServerStatus",""));
+        filterList.add(new Filter("GET","","/ServerStatus"));
+    }
+
 }

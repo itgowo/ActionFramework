@@ -14,15 +14,15 @@ public class DemoMainClassForWindow implements HttpServerInitCallback, onJsonCon
     public void onServerConfigPrepare(HttpServerManager httpServerManager) {
         Dispatcher dispatcher = new Dispatcher();
         httpServerManager.setThreadConfig(BaseConfig.getNettyBossGroupThreadNum(), BaseConfig.getNettyWorkerGroupThreadNum());
-        dispatcher.setValidSign(BaseConfig.getServerIsValidSign());
-        dispatcher.setValidTimeDifference(BaseConfig.getServerIsValidTimeDifference());
-        dispatcher.setServerClientTimeDifference(BaseConfig.getServerActionTimeDifference());
-        dispatcher.setValidParameter(BaseConfig.getServerIsValidParameter());
+//        dispatcher.setValidSign(BaseConfig.getServerIsValidSign());
+//        dispatcher.setValidTimeDifference(BaseConfig.getServerIsValidTimeDifference());
+//        dispatcher.setServerClientTimeDifference(BaseConfig.getServerActionTimeDifference());
+//        dispatcher.setValidParameter(BaseConfig.getServerIsValidParameter());
         if (BaseConfig.isAnalysisTps()) dispatcher.startAnalysisTps();
 //        dispatcher.startWatchAction();
         dispatcher.actionScanner(DemoMainClassForWindow.class);
         dispatcher.setDispatcherListener(new DemoDispatcher());
-        dispatcher.setJsonConvertListener(this);
+        ServerManager.setOnJsonConvertListener( this);
         httpServerManager.setOnServerListener(dispatcher);
     }
 
@@ -35,6 +35,11 @@ public class DemoMainClassForWindow implements HttpServerInitCallback, onJsonCon
     @Override
     public DemoClientRequest parseJson(String string) throws Exception {
         return JSON.parseObject(string, DemoClientRequest.class);
+    }
+
+    @Override
+    public <T> T parseJson(String string, Class<T> tClass) throws Exception {
+        return JSON.parseObject(string,tClass);
     }
 
     @Override

@@ -8,7 +8,9 @@ import com.itgowo.actionframework.base.ServerJsonEntity;
 import com.itgowo.servercore.http.HttpServerHandler;
 import com.itgowo.servercore.onServerListener;
 
-public class ActionServerReloadAction implements ActionRequest {
+import java.util.List;
+
+public class ActionServerReloadAction extends ActionRequest {
     public static final String ACTION = "ReloadAction";
     public static final String METHOD = "POST";
 
@@ -28,4 +30,10 @@ public class ActionServerReloadAction implements ActionRequest {
             handler.sendData(entity.setCode(ServerJsonEntity.Fail).setMsg("框架中未使用默认或设置HttpServer，无法reload！"), true);
         }
     }
+
+    @Override
+    public void getFilter(List<Filter> filterList) {
+        filterList.add(new Filter(METHOD,ACTION,""));
+    }
+
 }

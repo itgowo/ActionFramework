@@ -5,7 +5,7 @@ import com.itgowo.actionframework.ServerManager;
 /**
  * 客户端请求Json基类，实现了校验方法
  */
-public abstract class BaseRequest {
+public class BaseRequest {
     public String action;
     public String token;
     public String data;
@@ -69,33 +69,17 @@ public abstract class BaseRequest {
         return ServerManager.getOnJsonConvertListener().toJson(this);
     }
 
-    public abstract <T> T getData(Class<T> mClass) throws Exception;
+    public <T> T getData(Class<T> mClass) throws Exception {
+        return (T) ServerManager.getOnJsonConvertListener().parseJson(getData(), mClass);
+    }
 
     /**
      * 如果token为空，是否生成默认token，不处理返回null也可。
      *
      * @return
      */
-    public abstract String initToken();
-
-    /**
-     * 校验其他参数
-     *
-     * @return
-     */
-    public abstract boolean validParameter();
-
-    /**
-     * 检查数据完整性，校验
-     *
-     * @return
-     */
-    public abstract boolean validSign();
-
-    /**
-     * 校验服务器与客户端时差
-     *
-     * @return
-     */
-    public abstract boolean validTimeDifference(long timeLimit);
+    public String initToken() {
+//        token=null;
+        return null;
+    }
 }

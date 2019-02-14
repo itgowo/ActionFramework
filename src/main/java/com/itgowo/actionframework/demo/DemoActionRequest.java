@@ -4,11 +4,18 @@ import com.itgowo.servercore.http.HttpServerHandler;
 import com.itgowo.actionframework.base.ActionRequest;
 import com.itgowo.actionframework.base.BaseRequest;
 
-public class DemoActionRequest implements ActionRequest {
-    public static final String ACTION = "helloword;/helloword;/help";
-    public static final String METHOD = "POST;GET;PUT";
+import java.util.List;
+
+public class DemoActionRequest extends ActionRequest {
+
     @Override
     public void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception {
         handler.sendData("helloword!this is demo interface",false);
+    }
+
+    @Override
+    public void getFilter(List<Filter> filterList) {
+        filterList.add(new Filter("POST","helloword",null));
+        filterList.add(new Filter("GET",null,"helloword"));
     }
 }

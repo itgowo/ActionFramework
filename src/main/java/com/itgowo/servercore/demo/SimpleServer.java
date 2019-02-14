@@ -1,7 +1,9 @@
-package com.itgowo.servercore;
+package com.itgowo.servercore.demo;
 
 import com.itgowo.servercore.http.HttpServerHandler;
 import com.itgowo.servercore.http.HttpServerManager;
+import com.itgowo.servercore.onServerListener;
+import com.itgowo.servercore.packagesocket.PackageMessage;
 import com.itgowo.servercore.packagesocket.PackageServerHandler;
 import com.itgowo.servercore.packagesocket.PackageServerManager;
 import com.itgowo.servercore.socket.SocketServerHandler;
@@ -39,9 +41,9 @@ public class SimpleServer {
                     handler.sendOptionsResult();
                 } else if (handler.getHttpRequest().method() == HttpMethod.GET) {
                     if (path.equalsIgnoreCase("")) {
-                        path = "index.html";
+                        path = "/index.html";
                     }
-                    handler.sendFile(new File("/Users/lujianchao/WebstormProjects/untitled1" , path), true);
+                    handler.sendFile(new File("/Users/lujianchao/WebstormProjects/untitled1", path), true);
                 } else {
                     try {
                         Thread.sleep(1000);
@@ -172,8 +174,11 @@ public class SimpleServer {
         packageServerManager.setOnServerListener(new onServerListener<PackageServerHandler>() {
             @Override
             public void onReceiveHandler(PackageServerHandler handler) {
-                System.out.println("收到消息" + handler);
-                System.out.println("发送消息");
+                if (handler.getPackageMessage().getDataType() == PackageMessage.DATA_TYPE_HEART) {
+                    System.out.println("糟了，是心动的感觉！");
+                } else {
+                    System.out.println("收到消息" + handler);
+                }
                 handler.sendData(handler.getPackageMessage());
             }
 

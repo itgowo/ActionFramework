@@ -6,7 +6,6 @@ import com.itgowo.actionframework.classutils.ServerClassLoader;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -161,7 +160,6 @@ public class Utils {
     }
 
 
-
     public static void clossClass(Class c) {
         try {
             ClassLoader classLoader = c.getClassLoader();
@@ -180,22 +178,19 @@ public class Utils {
      * 注意: 如果你要取出来的不是常量,我也给你返回了null,这是为了确保,取出来的一定是 final 的常量
      *
      * @param fieldName 属性的名字
-     * @param clazz     在那个字节码中
-     * @return 如果找找到, 并且他也是常量, 我就返回它的值, 否则返回null
+     * @param object    在那个字节码中
      * @throws Exception 反射的风险异常.
      */
-    public static Object getFinalFieldValueByName(String fieldName, Class<?> clazz) throws Exception {
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            //确保你要取的,是常量.否则,就不用进去这个获取操作了
-            boolean isFinal = Modifier.isFinal(field.getModifiers());
-            if (isFinal) {
-                String name = field.getName();
-                if (fieldName.equals(name)) {
-                    return field.get(null);
-                }
+    public static Object getFieldValueByName(String fieldName, Object object) throws Exception {
+        try {
+            Field field = object.getClass().getField(fieldName);
+            if (field == null) {
+                field = object.getClass().getSuperclass().getField(fieldName);
             }
+            //设置对象的访问权限，保证对private的属性的访问
+            return field.get(object);
+        } catch (Exception e) {
+            return null;
         }
-        return null;
     }
 }

@@ -1,5 +1,5 @@
 group 'itgowo.com'
-version '0.0.67'
+version '0.0.74'
 
 apply plugin: 'java'
 apply plugin: 'com.novoda.bintray-release'//添加
@@ -9,6 +9,7 @@ buildscript {
         mavenCentral()
         google()
         jcenter()
+        maven { url 'http://maven.itgowo.com/repository/maven-public/'}
     }
     dependencies {
         classpath 'com.novoda:bintray-release:0.8.1'
@@ -27,7 +28,7 @@ publish {
     userOrg = 'itgowo'
     groupId = 'com.itgowo'
     artifactId = 'ActionFramework'
-    publishVersion = '0.0.71'
+    publishVersion = '0.0.74'
     desc = 'A framework that supports the http, socket, and websocket protocols, and includes a set of frameworks that implement actions'
     website = 'https://github.com/itgowo/ActionFramework'
 }

@@ -20,8 +20,8 @@ public class DemoDispatcher implements Dispatcher.onDispatcherListener {
 
     @Override
     public boolean onNotFoundAction(HttpServerHandler handler, String action) throws Exception {
-        handler.sendData(HttpResponseStatus.NOT_FOUND,"404,not found action",false);
-        return true;
+//        handler.sendData(HttpResponseStatus.NOT_FOUND,"404,not found action",false);
+        return false;
     }
 
     @Override

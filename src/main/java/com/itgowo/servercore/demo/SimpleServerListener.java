@@ -1,5 +1,7 @@
-package com.itgowo.servercore;
+package com.itgowo.servercore.demo;
 
+import com.itgowo.servercore.ServerHandler;
+import com.itgowo.servercore.onServerListener;
 import io.netty.channel.ChannelHandlerContext;
 
 public class SimpleServerListener implements onServerListener {

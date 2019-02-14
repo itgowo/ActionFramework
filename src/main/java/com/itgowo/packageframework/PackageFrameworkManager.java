@@ -1,7 +1,7 @@
 package com.itgowo.packageframework;
 
 import com.itgowo.servercore.ServerHandler;
-import com.itgowo.servercore.SimpleServerListener;
+import com.itgowo.servercore.demo.SimpleServerListener;
 import com.itgowo.servercore.packagesocket.PackageMessage;
 import com.itgowo.servercore.packagesocket.PackageServerHandler;
 import com.itgowo.servercore.packagesocket.PackageServerManager;

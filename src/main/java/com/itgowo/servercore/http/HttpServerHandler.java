@@ -9,7 +9,6 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.*;
 import io.netty.handler.stream.ChunkedFile;
 
-import javax.activation.MimetypesFileTypeMap;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -28,67 +27,72 @@ public class HttpServerHandler implements ServerHandler {
     public static final String CSS = "text/css";
     public static final String OBJECT = "application/octet-stream";
     private ChannelHandlerContext ctx;
-    private HttpRequest httpRequest;
-    private ByteBuf body;
-    private String path;
-    private String uri;
-    private boolean isMultipart = false;
+    private FullHttpRequest httpRequest;
+    private ByteBuf body = Unpooled.buffer();
+    private QueryStringDecoder decoderQuery;
+
     private Map<String, String> parameters = new HashMap<>();
     private HttpHeaders responseHeader = new DefaultHttpHeaders();
     private List<File> fileUploads = new ArrayList<>();
+    private HttpPostRequestDecoder decoder;
 
     public void addHeaderToResponse(String key, String value) {
         responseHeader.add(key, value);
     }
 
 
-    public HttpServerHandler(ChannelHandlerContext ctx, HttpRequest httpRequest, ByteBuf body, HttpPostRequestDecoder decoder, String webRootDir) {
+    public HttpServerHandler(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpDataFactory factory, String webRootDir) {
         this.ctx = ctx;
         this.httpRequest = httpRequest;
-
-        this.body = body;
+        decoder = new HttpPostRequestDecoder(factory, httpRequest);
+        if (decoder.isMultipart()) {
+            try {
+                decoder.offer(httpRequest);
+                for (InterfaceHttpData httpData : decoder.getBodyHttpDatas()) {
+                    try {
+                        if (httpData.retain() instanceof FileUpload) {
+                            FileUpload fileUpload = (FileUpload) httpData.retain();
+                            if (fileUpload.isInMemory()) {
+                                File file = new File(webRootDir, "upload");
+                                file.mkdirs();
+                                file = new File(file, fileUpload.getFilename());
+                                FileChannel fileChannel = null;
+                                fileChannel = new FileOutputStream(file).getChannel();
+                                fileChannel.write(fileUpload.content().nioBuffer());
+                                fileChannel.force(true);
+                                fileChannel.close();
+                                fileUploads.add(file);
+                            } else {
+                                File file = fileUpload.getFile();
+                                File fileto = new File(file.getParent(), fileUpload.getFilename());
+                                boolean r = file.renameTo(fileto);
+                                fileUploads.add(fileto);
+                            }
+                        } else {
+                            MixedAttribute attribute = (MixedAttribute) httpData.retain();
+                            parameters.put(attribute.getName(), attribute.getValue());
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (Exception e1) {
+                e1.printStackTrace();
+                ctx.channel().close();
+                return;
+            }
+        } else {
+            body.writeBytes(httpRequest.content());
+            httpRequest.release();
+        }
         if (httpRequest != null) {
-            QueryStringDecoder decoderQuery = new QueryStringDecoder(this.httpRequest.uri());
+            decoderQuery = new QueryStringDecoder(this.httpRequest.uri());
             Map<String, List<String>> stringListMap = decoderQuery.parameters();
             for (Map.Entry<String, List<String>> stringListEntry : stringListMap.entrySet()) {
                 if (stringListEntry.getValue() == null || stringListEntry.getValue().size() == 0) {
                     continue;
                 }
                 parameters.put(stringListEntry.getKey(), stringListEntry.getValue().get(0));
-            }
-            path = decoderQuery.path().replaceFirst("/", "");
-            uri = decoderQuery.uri();
-        }
-
-
-        if (decoder != null && decoder.isMultipart()) {
-            isMultipart = true;
-            for (InterfaceHttpData httpData : decoder.getBodyHttpDatas()) {
-                try {
-                    if (httpData.retain() instanceof FileUpload){
-                    FileUpload fileUpload = (FileUpload) httpData.retain();
-                    if (fileUpload.isInMemory()) {
-                        File file = new File(webRootDir, "upload");
-                        file.mkdirs();
-                        file = new File(file, fileUpload.getFilename());
-                        FileChannel fileChannel = null;
-                        fileChannel = new FileOutputStream(file).getChannel();
-                        fileChannel.write(fileUpload.content().nioBuffer());
-                        fileChannel.force(true);
-                        fileChannel.close();
-                        fileUploads.add(file);
-                    } else {
-                        File file = fileUpload.getFile();
-                        File fileto = new File(file.getParent(), fileUpload.getFilename());
-                        boolean r = file.renameTo(fileto);
-                        fileUploads.add(fileto);
-                    }}else {
-                        MixedAttribute attribute= (MixedAttribute) httpData.retain();
-                        parameters.put(attribute.getName(),attribute.getValue());
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }
@@ -98,8 +102,7 @@ public class HttpServerHandler implements ServerHandler {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("HttpServerHandler{")
                 .append("\r\nHttpMethod=").append(httpRequest == null ? "" : httpRequest.method() == null ? "" : httpRequest.method().name())
-                .append("\r\npath='").append(path + '\'')
-                .append("\r\nuri='" + uri + '\'')
+                .append("\r\nuri='" + decoderQuery == null ? "" : decoderQuery.toString() + '\'')
                 .append("\r\nparameters=" + parameters)
                 .append("\r\nfileUploads=" + fileUploads)
                 .append(httpRequest == null || httpRequest.headers() == null || httpRequest.headers().entries() == null
@@ -131,11 +134,11 @@ public class HttpServerHandler implements ServerHandler {
     }
 
     public String getPath() {
-        return path;
+        return decoderQuery.path();
     }
 
     public String getUri() {
-        return uri;
+        return decoderQuery.uri();
     }
 
     public String getBody(Charset charset) {
@@ -218,6 +221,7 @@ public class HttpServerHandler implements ServerHandler {
         response.headers().add(HttpHeaderNames.ACCESS_CONTROL_MAX_AGE, "Origin, 3600");
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
+
     public String getDefaultMimeType(File file) {
         if (file == null) {
             return JSON;
@@ -233,6 +237,7 @@ public class HttpServerHandler implements ServerHandler {
             return OBJECT;
         }
     }
+
     /**
      * 用http协议返回一个文件
      *
@@ -271,6 +276,6 @@ public class HttpServerHandler implements ServerHandler {
     }
 
     public boolean isMultipart() {
-        return isMultipart;
+        return decoder.isMultipart();
     }
 }

@@ -1,15 +1,13 @@
 package com.itgowo.servercore;
 
-import com.itgowo.servercore.httpclient.HttpClient;
-import com.itgowo.servercore.httpclient.HttpResponse;
-import com.itgowo.servercore.httpclient.onCallbackListener;
+import com.itgowo.servercore.demo.SimpleServer;
 
 public class Test {
     public static void main(String[] args) {
 
 
         try {
-            SimpleServer.testPacgageServer();
+            SimpleServer.testHttpServer();
 //            HttpClient.get("http://stzb.163.com/herolist/100006.html",null, new WebSocketServerHandler.onReceiveHandlerListener() {
 //                @Override
 //                public void onReceiveHandler(WebSocketServerHandler handler) {

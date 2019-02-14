@@ -21,20 +21,15 @@ public class DemoMain {
     private static void initServer() {
         int portint = BaseConfig.getServerPort();
         ServerManager.setLogger(LogU.getLogU("DemoServer",Level.ALL));
-
-        httpServerManager.setThreadConfig(BaseConfig.getNettyBossGroupThreadNum(), BaseConfig.getNettyWorkerGroupThreadNum());
-        dispatcher.setValidSign(BaseConfig.getServerIsValidSign());
-        dispatcher.setValidTimeDifference(BaseConfig.getServerIsValidTimeDifference());
-        dispatcher.setServerClientTimeDifference(BaseConfig.getServerActionTimeDifference());
-        dispatcher.setValidParameter(BaseConfig.getServerIsValidParameter());
-//        if (BaseConfig.isAnalysisTps())dispatcher.startAnalysisTps();
-//        dispatcher.startWatchAction();
-        dispatcher.actionScanner(DemoMain.class);
-        dispatcher.setDispatcherListener(new DemoDispatcher());
-        dispatcher.setJsonConvertListener(new onJsonConvertListener<DemoClientRequest>() {
+        ServerManager.setOnJsonConvertListener(new onJsonConvertListener<DemoClientRequest>() {
             @Override
             public DemoClientRequest parseJson(String string) throws Exception {
                 return JSON.parseObject(string,DemoClientRequest.class);
+            }
+
+            @Override
+            public <T> T parseJson(String string, Class<T> tClass) throws Exception {
+                return JSON.parseObject(string,tClass);
             }
 
             @Override
@@ -42,6 +37,12 @@ public class DemoMain {
                 return JSON.toJSONString(o);
             }
         });
+        httpServerManager.setThreadConfig(BaseConfig.getNettyBossGroupThreadNum(), BaseConfig.getNettyWorkerGroupThreadNum());
+//        if (BaseConfig.isAnalysisTps())dispatcher.startAnalysisTps();
+//        dispatcher.startWatchAction();
+        dispatcher.setRootPath("demo");
+        dispatcher.actionScanner(DemoMain.class);
+        dispatcher.setDispatcherListener(new DemoDispatcher());
         httpServerManager.setOnServerListener(dispatcher);
         httpServerManager.setServerName("DemoServer");
         int finalPortint = portint;

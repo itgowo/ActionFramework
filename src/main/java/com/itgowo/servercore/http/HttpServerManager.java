@@ -33,7 +33,6 @@ public class HttpServerManager extends BaseServerManager {
         ch.pipeline().addLast(new HttpObjectAggregator(Integer.MAX_VALUE));
         ch.pipeline().addLast(new ChunkedWriteHandler());
         ch.pipeline().addLast(new HttpServerInboundHandlerAdapter(webRootDir,onServerListener));
-//        ch.pipeline().addLast(new HttpUploadServerHandler());
         serverBootstrap.option(ChannelOption.SO_BACKLOG, 4096)
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.SO_KEEPALIVE, false);

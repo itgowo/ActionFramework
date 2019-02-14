@@ -10,6 +10,8 @@ public interface onJsonConvertListener<Request extends BaseRequest> {
      */
     public Request parseJson(String string) throws Exception;
 
+    public <T> T parseJson(String string, Class<T> tClass) throws Exception;
+
     /**
      * 生成json序列化文本
      *

@@ -32,7 +32,6 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_NETTY_WORKER_THREAD_NUM = "ServerNettyWorkerThreadNum";
     public static final String CONFIG_SERVER_DYNAMIC_ACTION_DIR = "ServerDynamicActionDir";
     public static final String CONFIG_SERVER_ACTION_PACKAGE = "ServerActionPackage";
-    public static final String CONFIG_SERVER_AUTO_WATCH_ACTION = "ServerAutoWatchAction";
     public static final String CONFIG_SERVER_MAIN_CLASS = "ServerMainClass";
     public static final String CONFIG_SERVER_SHOW_SERVER_WINDOW = "ServerShowServerWindow";
     public static final String CONFIG_SERVER_ANALYSIS_TPS = "ServerAnalysisTps";
@@ -214,15 +213,6 @@ public class BaseConfig {
     }
 
     /**
-     * 设置是否热更新动态接口
-     *
-     * @return
-     */
-    public static boolean getServerAutoWatchAction() {
-        return getProperty(CONFIG_SERVER_AUTO_WATCH_ACTION, false);
-    }
-
-    /**
      * 设置是否可以打开服务控制界面，接口可以添加打开，或者jar文件打开
      *
      * @return
@@ -233,6 +223,7 @@ public class BaseConfig {
 
     /**
      * 是否打开TPS分析开关，默认关
+     *
      * @return
      */
     public static boolean isAnalysisTps() {
