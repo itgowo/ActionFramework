@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.itgowo.actionframework.ServerManager;
 import com.itgowo.actionframework.base.onJsonConvertListener;
 import com.itgowo.servercore.http.HttpServerManager;
-import com.itgowo.actionframework.base.BaseConfig;
+import com.itgowo.BaseConfig;
 import com.itgowo.actionframework.base.Dispatcher;
 import com.itgowo.servercore.utils.LogU;
 

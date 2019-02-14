@@ -1,7 +1,7 @@
 package com.itgowo.actionframework.view;
 
 
-import com.itgowo.actionframework.base.BaseConfig;
+import com.itgowo.BaseConfig;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

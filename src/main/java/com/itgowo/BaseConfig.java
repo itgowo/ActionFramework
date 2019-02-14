@@ -1,4 +1,4 @@
-package com.itgowo.actionframework.base;
+package com.itgowo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +35,7 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_MAIN_CLASS = "ServerMainClass";
     public static final String CONFIG_SERVER_SHOW_SERVER_WINDOW = "ServerShowServerWindow";
     public static final String CONFIG_SERVER_ANALYSIS_TPS = "ServerAnalysisTps";
+    public static final String CONFIG_SERVER_MYBATIS_MAPPER_PATH = "config";
 
     public static List<String> ServerActionPackage = null;
 
@@ -210,6 +211,10 @@ public class BaseConfig {
      */
     public static String getServerMainClass() {
         return getProperty(CONFIG_SERVER_MAIN_CLASS, null);
+    }
+
+    public static String getConfigServerMybatisMapperPath() {
+        return getProperty(CONFIG_SERVER_MYBATIS_MAPPER_PATH, "config");
     }
 
     /**

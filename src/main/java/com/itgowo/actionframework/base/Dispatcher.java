@@ -1,5 +1,6 @@
 package com.itgowo.actionframework.base;
 
+import com.itgowo.BaseConfig;
 import com.itgowo.actionframework.ServerManager;
 import com.itgowo.actionframework.classutils.ClassEntry;
 import com.itgowo.actionframework.classutils.ClassUtils;
@@ -167,7 +168,6 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
                     }
 
                 }
-
             }
         } catch (Exception e) {
             ServerManager.getLogger().warning(e.getLocalizedMessage());
@@ -439,7 +439,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
         void onDispatcherError(Throwable throwable);
 
         /**
-         * 请求中断拦截，true则拦截不再传递下去
+         * 请求中断拦截，true则拦截不再传递下去，由拦截过程处理发送结果，后续不再做任何处理
          *
          * @param handler
          * @return

@@ -9,7 +9,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class ClassUtils {
-    public static List<ClassEntry> getClasssFromJarFile(String jarPaht, List<String> packageName) {
+    public static List<ClassEntry> getClasssFromJarFile(String jarPaht, List<String> packageName,String endWith) {
         List<ClassEntry> clazzs = new ArrayList<>();
         if (packageName != null && packageName.size() > 0) {
             for (int i = 0; i < packageName.size(); i++) {
@@ -34,7 +34,7 @@ public class ClassUtils {
                 if (packageName.get(i) == null) {
                     continue;
                 }
-                if (entry.getName().startsWith(packageName.get(i)) && entry.getName().endsWith(".class")) {
+                if (entry.getName().startsWith(packageName.get(i)) && entry.getName().endsWith(endWith)) {
                     jarEntryList.add(entry);
                 }
             }
@@ -63,7 +63,7 @@ public class ClassUtils {
             for (int i = 0; i < files.size(); i++) {
                 File cur = files.get(i);
                 if (cur.isFile() && cur.getName().endsWith(".jar")) {
-                    classEntries.addAll(getClasssFromJarFile(cur.getAbsolutePath(), filter));
+                    classEntries.addAll(getClasssFromJarFile(cur.getAbsolutePath(), filter,".class"));
                 } else if (cur.getName().endsWith(".class")) {
                     ClassEntry classEntry = getClassFromFile(path, cur.getAbsolutePath(), filter);
                     if (classEntry != null) classEntries.add(classEntry);
@@ -72,7 +72,7 @@ public class ClassUtils {
         } else if (path.endsWith(".class")) {
 
         } else if (path.endsWith(".jar")) {
-            classEntries.addAll(getClasssFromJarFile(path, filter));
+            classEntries.addAll(getClasssFromJarFile(path, filter,".class"));
         }
         return classEntries;
 

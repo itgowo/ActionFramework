@@ -1,6 +1,6 @@
 package com.itgowo.actionframework;
 
-import com.itgowo.actionframework.base.BaseConfig;
+import com.itgowo.BaseConfig;
 import com.itgowo.actionframework.base.HttpServerInitCallback;
 import com.itgowo.actionframework.base.onJsonConvertListener;
 import com.itgowo.servercore.http.HttpServerManager;

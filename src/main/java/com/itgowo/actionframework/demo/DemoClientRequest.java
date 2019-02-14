@@ -66,34 +66,31 @@ public class DemoClientRequest extends BaseRequest {
         }
         return sign1.toString();
     }
-//
-//    @Override
-//    public boolean validParameter() {
-//        if (action == null || action.trim().length() < 1) {
+
+    public boolean validParameter() {
+        if (action == null || action.trim().length() < 1) {
+            return false;
+        }
+//        if (token == null || token.trim().length() < 16) {
 //            return false;
 //        }
-////        if (token == null || token.trim().length() < 16) {
-////            return false;
-////        }
-////        if (flag == null || flag.trim().length() < 1) {
-////            return false;
-////        }
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean validSign() {
-////        if (sign == null || sign.trim().length() < 16) {
-////            return false;
-////        }
-////        return sign.equals(fixSign());
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean validTimeDifference(long l) {
-//        return System.currentTimeMillis() - timeStamp > l;
-//    }
+//        if (flag == null || flag.trim().length() < 1) {
+//            return false;
+//        }
+        return true;
+    }
+
+    public boolean validSign() {
+//        if (sign == null || sign.trim().length() < 16) {
+//            return false;
+//        }
+//        return sign.equals(fixSign());
+        return true;
+    }
+
+    public boolean validTimeDifference(long l) {
+        return System.currentTimeMillis() - timeStamp > l;
+    }
 
     public String getSign() {
         return sign;

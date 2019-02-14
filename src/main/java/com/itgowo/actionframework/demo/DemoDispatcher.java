@@ -1,9 +1,8 @@
 package com.itgowo.actionframework.demo;
 
 import com.itgowo.actionframework.ServerManager;
-import com.itgowo.servercore.http.HttpServerHandler;
 import com.itgowo.actionframework.base.Dispatcher;
-import io.netty.handler.codec.http.HttpResponseStatus;
+import com.itgowo.servercore.http.HttpServerHandler;
 
 public class DemoDispatcher implements Dispatcher.onDispatcherListener {
 
@@ -15,6 +14,7 @@ public class DemoDispatcher implements Dispatcher.onDispatcherListener {
     @Override
     public boolean interrupt(HttpServerHandler handler) {
         ServerManager.getLogger().finest(handler.toString());
+        //TODO 校验，发送处理结果，返回true则后续不再处理。
         return false;
     }
 

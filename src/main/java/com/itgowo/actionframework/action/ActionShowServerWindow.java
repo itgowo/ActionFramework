@@ -1,7 +1,7 @@
 package com.itgowo.actionframework.action;
 
 import com.itgowo.actionframework.base.ActionRequest;
-import com.itgowo.actionframework.base.BaseConfig;
+import com.itgowo.BaseConfig;
 import com.itgowo.actionframework.base.BaseRequest;
 import com.itgowo.actionframework.base.ServerJsonEntity;
 import com.itgowo.actionframework.view.ServerConfig;
