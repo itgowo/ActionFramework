@@ -183,27 +183,28 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
      */
     public Dispatcher registerAction(ActionRequest.Filter filter, ActionRequest actionRequest, String filePath) {
 
-        if (filter.path == null) {
+        if (filter.path == null || filter.path.equals("")) {
             filter.path = "/";
+        }
+
+        if (!filter.path.startsWith("/") && filter.path.length() > 1) {
+            filter.path = "/" + filter.path;
+        }
+        if (filter.path.endsWith("/")) {
+            filter.path = filter.path.substring(0, filter.path.length() - 1);
+        }
+        if (rootPath != null) {
+            if (rootPath.endsWith("/")) {
+                filter.path = rootPath.substring(0, rootPath.length() - 1) + filter.path;
+            } else {
+                filter.path = rootPath + filter.path;
+            }
         }
         HashMap<String, HashMap<String, ActionRequest>> methodlist;
         if (actionList.containsKey(filter.path)) {
             methodlist = actionList.get(filter.path);
         } else {
             methodlist = new HashMap<>();
-            if (!filter.path.startsWith("/") && filter.path.length() > 1) {
-                filter.path = "/" + filter.path;
-            }
-            if (filter.path.endsWith("/")) {
-                filter.path = filter.path.substring(0, filter.path.length() - 1);
-            }
-            if (rootPath != null) {
-                if (rootPath.endsWith("/")) {
-                    filter.path = rootPath.substring(0, rootPath.length() - 1) + filter.path;
-                } else {
-                    filter.path = rootPath + filter.path;
-                }
-            }
             actionList.put(filter.path, methodlist);
         }
 

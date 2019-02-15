@@ -1,6 +1,7 @@
 package com.itgowo.mybatisframework;
 
 import com.itgowo.BaseConfig;
+import com.itgowo.actionframework.ServerManager;
 import com.itgowo.actionframework.utils.Utils;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
@@ -16,9 +17,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -26,6 +29,8 @@ public class MybatisManager {
 
     private static SqlSessionFactory mSqlSessionFactory;
     private static SqlSessionFactoryBuilder mSqlSessionFactoryBuilder;
+    private static AtomicBoolean isReload = new AtomicBoolean(false);
+    private static Lock lock = new ReentrantLock();
 
     public static SqlSessionFactory getSqlSessionFactory() {
         if (mSqlSessionFactoryBuilder == null) {
@@ -35,52 +40,121 @@ public class MybatisManager {
             Configuration configuration = new Configuration(new Environment("MybatisManager", new JdbcTransactionFactory(), DataSourceFactory.getDataSource()));
             configuration.setLazyLoadingEnabled(true);
             mSqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
-            try {
-                File file = new File(MybatisManager.class.getProtectionDomain().getCodeSource().getLocation().getFile());
-
-                List<File> files = new ArrayList<>();
-                boolean isJar = false;
-                if (file.isDirectory()) {
-                    file = file.getParentFile();
-                    files = Utils.getAllFileFromDir(file, ".xml");
-                } else {
-                    isJar = true;
-                    JarFile jarFile = new JarFile(file);
-                    Enumeration<JarEntry> entryEnumeration = jarFile.entries();
-                    while (entryEnumeration.hasMoreElements()) {
-                        JarEntry entry = entryEnumeration.nextElement();
-
-                        if (entry.getName().endsWith(".xml") && !entry.getName().startsWith("META-INF")) {
-                            files.add(new File(entry.getName()));
-                        }
-                    }
-                }
-                for (int i = 0; i < files.size(); i++) {
-                    InputStream inputStream = null;
-                    System.out.println(files.get(i));
-                    try {
-                        if (isJar) {
-                            System.out.println(isJar);
-                            inputStream = Resources.getResourceAsStream(files.get(i).toString());
-                        } else {
-                            inputStream = new FileInputStream(files.get(i));
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    XMLMapperBuilder builder = new XMLMapperBuilder(inputStream, mSqlSessionFactory.getConfiguration(), "", mSqlSessionFactory.getConfiguration().getSqlFragments());
-                    builder.parse();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            loadMapper();
+        }
+        if (isReload.get()) {
+            lock.lock();
+            lock.unlock();
         }
         return mSqlSessionFactory;
     }
 
+    public static boolean reloadMapper() {
+        lock.lock();
+        isReload.set(true);
+        ServerManager.getLogger().info("重新加载Mapper");
+        try {
+            removeConfig(mSqlSessionFactory.getConfiguration());
+            loadMapper();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            isReload.set(false);
+            lock.unlock();
+        }
+    }
+
+    public static <T> T getDao(Class<T> c) {
+        return getSqlSessionFactory().openSession().getMapper(c);
+    }
+
+    /**
+     * 加载开发时运行路径和jar文件路径内的xml文件，默认排除目录META-INF
+     */
+    private static void loadMapper() {
+        try {
+            File file = new File(MybatisManager.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+            List<File> files = new ArrayList<>();
+            File df = new File(BaseConfig.getConfigServerMybatisMapperDynamicPath());
+            if (df != null && df.exists() && df.isDirectory()) {
+                files.addAll(Utils.getAllFileFromDir(df, ".xml"));
+            }
+            boolean isJar = false;
+            if (file.isDirectory()) {
+                file = file.getParentFile();
+                files.addAll(Utils.getAllFileFromDir(file, ".xml"));
+            } else {
+                isJar = true;
+                JarFile jarFile = new JarFile(file);
+                Enumeration<JarEntry> entryEnumeration = jarFile.entries();
+                String per = BaseConfig.getConfigServerMybatisMapperPath();
+                while (entryEnumeration.hasMoreElements()) {
+                    JarEntry entry = entryEnumeration.nextElement();
+                    if (entry.getName().endsWith(".xml") && !entry.getName().startsWith("META-INF") && (per == null ? true : entry.getName().startsWith(per))) {
+                        files.add(new File(entry.getName()));
+                    }
+                }
+            }
+
+            for (int i = 0; i < files.size(); i++) {
+                try {
+                    InputStream inputStream = null;
+                    if (isJar) {
+                        inputStream = Resources.getResourceAsStream(files.get(i).toString());
+                    } else {
+                        inputStream = new FileInputStream(files.get(i));
+                    }
+                    XMLMapperBuilder builder = new XMLMapperBuilder(inputStream, mSqlSessionFactory.getConfiguration(), "", mSqlSessionFactory.getConfiguration().getSqlFragments());
+                    builder.parse();
+                    ServerManager.getLogger().info("Mapper添加成功：" + files.get(i));
+                } catch (Exception e) {
+                    ServerManager.getLogger().info("Mapper解析失败：" + files.get(i));
+                }
+            }
+            ServerManager.getLogger().info("加载Mapper完成");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 清空Configuration中几个重要的缓存
+     *
+     * @param configuration
+     * @throws Exception
+     */
+    private static void removeConfig(Configuration configuration) throws Exception {
+        Class<?> classConfig = configuration.getClass();
+        clearMap(classConfig, configuration, "mappedStatements");
+        clearMap(classConfig, configuration, "caches");
+        clearMap(classConfig, configuration, "resultMaps");
+        clearMap(classConfig, configuration, "parameterMaps");
+        clearMap(classConfig, configuration, "keyGenerators");
+        clearMap(classConfig, configuration, "sqlFragments");
+        clearSet(classConfig, configuration, "loadedResources");
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void clearMap(Class<?> classConfig, Configuration configuration, String fieldName) throws Exception {
+        Field field = classConfig.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Map mapConfig = (Map) field.get(configuration);
+        mapConfig.clear();
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static void clearSet(Class<?> classConfig, Configuration configuration, String fieldName) throws Exception {
+        Field field = classConfig.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        Set setConfig = (Set) field.get(configuration);
+        setConfig.clear();
+    }
+
     public static class DataSourceFactory {
         public static DataSource getDataSource() {
-            String driver = "com.mysql.jdbc.Driver";
+            String driver = "com.mysql.cj.jdbc.Driver";
             String url = BaseConfig.getServerMySQLUrl();
             String username = BaseConfig.getServerMySQLUser();
             String password = BaseConfig.getServerMySQLPassword();

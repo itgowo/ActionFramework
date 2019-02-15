@@ -35,7 +35,8 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_MAIN_CLASS = "ServerMainClass";
     public static final String CONFIG_SERVER_SHOW_SERVER_WINDOW = "ServerShowServerWindow";
     public static final String CONFIG_SERVER_ANALYSIS_TPS = "ServerAnalysisTps";
-    public static final String CONFIG_SERVER_MYBATIS_MAPPER_PATH = "config";
+    public static final String CONFIG_SERVER_MYBATIS_MAPPER_PATH = "ServerMybatisMapperPath";
+    public static final String CONFIG_SERVER_MYBATIS_MAPPER_DYNAMIC_PATH = "ServerMybatisMapperDynamicPath";
 
     public static List<String> ServerActionPackage = null;
 
@@ -198,7 +199,7 @@ public class BaseConfig {
      * @return
      */
     public static List<String> getServerActionPackageList() {
-        String s = getProperty(CONFIG_SERVER_ACTION_PACKAGE, null);
+        String s = getProperty(CONFIG_SERVER_ACTION_PACKAGE, "com.itgowo.actionframework.action");
         String[] split = s.split(";");
         ServerActionPackage = Arrays.asList(split);
         return ServerActionPackage;
@@ -217,6 +218,13 @@ public class BaseConfig {
         return getProperty(CONFIG_SERVER_MYBATIS_MAPPER_PATH, "config");
     }
 
+    /**
+     * 外部mapper配置，必须对应内部class，只是为了动态修改sql使用。
+     * @return
+     */
+    public static String getConfigServerMybatisMapperDynamicPath() {
+        return getProperty(CONFIG_SERVER_MYBATIS_MAPPER_DYNAMIC_PATH, "");
+    }
     /**
      * 设置是否可以打开服务控制界面，接口可以添加打开，或者jar文件打开
      *

@@ -1,5 +1,6 @@
 package com.itgowo.mybatisframework.demo;
 
+import com.itgowo.mybatisframework.MyBatisBaseDao;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
