@@ -1,12 +1,12 @@
 package com.itgowo.mybatisframework;
 
-import com.itgowo.mybatisframework.demo.StzbHero2;
-import com.itgowo.mybatisframework.demo.StzbHero2Dao;
+import com.itgowo.mybatisframework.demo.DemoEntity;
+import com.itgowo.mybatisframework.demo.DemoDao;
 
 public class Test {
     public static void main(String[] args) {
-        StzbHero2Dao dao = MybatisManager.getDao(StzbHero2Dao.class);
-        StzbHero2 d = dao.select(111);
+        DemoDao dao = MybatisManager.getDao(DemoDao.class);
+        DemoEntity d = dao.select(111);
         System.out.println(d.getId()+"  "+dao);
         new Thread(new Runnable() {
             @Override
@@ -17,7 +17,7 @@ public class Test {
                     e.printStackTrace();
                 }
                 MybatisManager.reloadMapper();
-                StzbHero2 d = dao.select(111);
+                DemoEntity d = dao.select(111);
                 System.out.println(d.getId()+"  "+dao);
             }
         }).start();

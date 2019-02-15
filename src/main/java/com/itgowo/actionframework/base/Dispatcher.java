@@ -352,6 +352,9 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
     }
 
     private ActionRequest findAction(String path, String method, String action) {
+        if (path.startsWith("/") && path.length() > 1 && path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
         ActionRequest actionRequest = null;
         HashMap<String, HashMap<String, ActionRequest>> pathMap = actionList.get(path);
         if (pathMap != null) {
