@@ -23,6 +23,10 @@ public interface MyBatisBaseDao<Model, PK extends Serializable> {
 
     Model selectByPrimaryKey(PK id);
 
+    Model selectByUUID(String uuid);
+
+    int deleteByUUID(String uuid);
+
     int updateByPrimaryKeySelective(Model record);
 
     int updateByPrimaryKeyWithBLOBs(Model record);
