@@ -225,7 +225,6 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
 
         actionPath.put(filePath, filter.toString());
         stringBuilder.append("Path:" + filter.path + "  HttpMethod:" + filter.method + "  Action:" + filter.postAction + " \t Class:" + actionRequest.getClass().getName() + "\r\n");
-        System.out.println(actionList.toString());
         return this;
     }
 
