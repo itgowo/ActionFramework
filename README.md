@@ -1,4 +1,4 @@
-# BaseServer
+# ActionServerFramework
 
 ## 概述
 QQ：1264957104
@@ -10,8 +10,17 @@ Web：http://itgowo.com
 这是一个来自android开发写java的经验框架，支持热更新等，主要是自用库，现在发出来，很多第三方框架未集成，需要单独实现。默认接口都是POST形式，自动解析Body，也可以复写各种校验参数来达到过滤恶意攻击。
 
 此框架依赖netty部分库，具体使用时按需打包,库内有demo文件，支持接口触发或者直接运行Jar打开配置界面。
-
-    implementation 'com.itgowo:BaseServer:0.0.33'
+```
+implementation 'com.itgowo:ActionFramework:0.0.76'
+```
+```
+<dependency>
+  <groupId>com.itgowo</groupId>
+  <artifactId>ActionFramework</artifactId>
+  <version>0.0.76</version>
+  <type>pom</type>
+</dependency>
+```
 
 ## 配置文件（config.properties）
 默认会创建一个配置文件在运行目录，包含基础配置信息和拓展信息，只有部分是必须的。
