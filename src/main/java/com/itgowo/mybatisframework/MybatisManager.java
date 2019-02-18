@@ -6,6 +6,7 @@ import com.itgowo.actionframework.utils.Utils;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.logging.log4j2.Log4j2Impl;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -32,10 +33,6 @@ public class MybatisManager {
     private static AtomicBoolean isReload = new AtomicBoolean(false);
     private static Lock lock = new ReentrantLock();
 
-    static {
-        getSqlSessionFactory();
-    }
-
     public static SqlSessionFactory getSqlSessionFactory() {
         if (mSqlSessionFactoryBuilder == null) {
             mSqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();
@@ -43,6 +40,16 @@ public class MybatisManager {
         if (mSqlSessionFactory == null) {
             Configuration configuration = new Configuration(new Environment("MybatisManager", new JdbcTransactionFactory(), DataSourceFactory.getDataSource()));
             configuration.setLazyLoadingEnabled(true);
+            String s = BaseConfig.getConfigServerMybatisLogimplClass();
+            Class logClass = null;
+            try {
+                logClass = Class.forName(s);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            if (logClass != null) {
+                configuration.setLogImpl(Log4j2Impl.class);
+            }
             mSqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
             loadMapper();
         }
@@ -71,7 +78,7 @@ public class MybatisManager {
     }
 
     public static <T> T getDao(Class<T> c) {
-        return getSqlSessionFactory().openSession().getMapper(c);
+        return getSqlSessionFactory().openSession(true).getMapper(c);
     }
 
     /**

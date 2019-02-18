@@ -37,6 +37,7 @@ public class BaseConfig {
     public static final String CONFIG_SERVER_ANALYSIS_TPS = "ServerAnalysisTps";
     public static final String CONFIG_SERVER_MYBATIS_MAPPER_PATH = "ServerMybatisMapperPath";
     public static final String CONFIG_SERVER_MYBATIS_MAPPER_DYNAMIC_PATH = "ServerMybatisMapperDynamicPath";
+    public static final String CONFIG_SERVER_MYBATIS_LOGIMPL_CLASS = "ServerMybatisLogImplClass";
 
     public static List<String> ServerActionPackage = null;
 
@@ -214,17 +215,34 @@ public class BaseConfig {
         return getProperty(CONFIG_SERVER_MAIN_CLASS, null);
     }
 
+    /**
+     * 获取mapper过滤路径
+     *
+     * @return
+     */
     public static String getConfigServerMybatisMapperPath() {
         return getProperty(CONFIG_SERVER_MYBATIS_MAPPER_PATH, "config");
     }
 
     /**
+     * mybatis加载日志系统
+     * org.apache.ibatis.logging.log4j2.Log4j2Impl
+     *
+     * @return
+     */
+    public static String getConfigServerMybatisLogimplClass() {
+        return getProperty(CONFIG_SERVER_MYBATIS_LOGIMPL_CLASS, "");
+    }
+
+    /**
      * 外部mapper配置，必须对应内部class，只是为了动态修改sql使用。
+     *
      * @return
      */
     public static String getConfigServerMybatisMapperDynamicPath() {
         return getProperty(CONFIG_SERVER_MYBATIS_MAPPER_DYNAMIC_PATH, "");
     }
+
     /**
      * 设置是否可以打开服务控制界面，接口可以添加打开，或者jar文件打开
      *

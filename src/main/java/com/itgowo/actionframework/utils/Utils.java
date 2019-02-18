@@ -138,7 +138,7 @@ public class Utils {
     public static List<File> getAllFileFromDir(File rootDir, String pathFilter, String extName) {
         List<File> files = new ArrayList<>();
         if (rootDir.isFile()) {
-            if (extName != null && rootDir.getAbsolutePath().endsWith(extName)) {
+            if ((extName != null && rootDir.getAbsolutePath().endsWith(extName)) && (pathFilter != null && rootDir.getParentFile().getAbsolutePath().endsWith(pathFilter))) {
                 files.add(rootDir);
             } else if (extName == null) {
                 files.add(rootDir);
@@ -149,7 +149,7 @@ public class Utils {
                 if (f.isDirectory())    //若是目录，则递归打印该目录下的文件
                     files.addAll(getAllFileFromDir(f, pathFilter, extName));
                 if (f.isFile())//若是文件，直接打印
-                    if ((extName != null && f.getAbsolutePath().endsWith(extName)) && (pathFilter != null && f.getAbsolutePath().startsWith(pathFilter))) {
+                    if ((extName != null && f.getAbsolutePath().endsWith(extName)) && (pathFilter != null && f.getParentFile().getAbsolutePath().endsWith(pathFilter))) {
                         files.add(f);
                     } else if (extName == null) {
                         files.add(f);
