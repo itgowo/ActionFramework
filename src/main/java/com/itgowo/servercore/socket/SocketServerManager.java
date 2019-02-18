@@ -11,6 +11,10 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class SocketServerManager extends BaseServerManager {
 
+    public SocketServerManager(String serverName) {
+        super(serverName);
+    }
+
     @Override
     protected void prepareServerConfig(ServerBootstrap serverBootstrap, SocketChannel ch) throws Exception {
         ch.pipeline().addLast(SocketServerInboundHandlerAdapter.class.getSimpleName(), new SocketServerInboundHandlerAdapter(onServerListener));

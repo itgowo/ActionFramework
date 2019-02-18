@@ -20,9 +20,8 @@ public class PackageFrameworkManager {
 
     public void startServer(String serverName, onPackageFrameworkListener listener) {
         this.listener = listener;
-        packageServerManager = new PackageServerManager();
+        packageServerManager = new PackageServerManager("packageServerManager");
         packageServerManager.setThreadConfig(2, 4);
-        packageServerManager.setServerName(serverName);
         packageServerManager.setOnServerListener(new SimpleServerListener() {
             @Override
             public void onReceiveHandler(ServerHandler handler) throws Exception {

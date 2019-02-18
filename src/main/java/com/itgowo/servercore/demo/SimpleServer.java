@@ -19,7 +19,7 @@ import java.io.UnsupportedEncodingException;
 
 public class SimpleServer {
     public static void testHttpServer() throws Exception {
-        HttpServerManager httpServerManager = new HttpServerManager("web");
+        HttpServerManager httpServerManager = new HttpServerManager("web","simpleHttpServer");
         httpServerManager.setThreadConfig(2, 4);
         httpServerManager.setOnServerListener(new onServerListener<HttpServerHandler>() {
             @Override
@@ -79,7 +79,7 @@ public class SimpleServer {
     }
 
     public static void testSocketServer() throws Exception {
-        SocketServerManager socketServerManager = new SocketServerManager();
+        SocketServerManager socketServerManager = new SocketServerManager("testSocketServer");
         socketServerManager.setThreadConfig(2, 4);
         socketServerManager.setOnServerListener(new onServerListener<SocketServerHandler>() {
             @Override
@@ -124,7 +124,7 @@ public class SimpleServer {
     }
 
     public static void testWebSocketServer() throws Exception {
-        WebSocketServerManager manager = new WebSocketServerManager();
+        WebSocketServerManager manager = new WebSocketServerManager("testWebSocketServer");
         manager.setThreadConfig(1, 1);
         manager.setOnServerListener(new onServerListener<WebSocketServerHandler>() {
             @Override
@@ -168,8 +168,8 @@ public class SimpleServer {
         manager.start();
     }
 
-    public static void testPacgageServer() throws Exception {
-        PackageServerManager packageServerManager = new PackageServerManager();
+    public static void testPackageServer() throws Exception {
+        PackageServerManager packageServerManager = new PackageServerManager("testPackageServer");
         packageServerManager.setThreadConfig(2, 4);
         packageServerManager.setOnServerListener(new onServerListener<PackageServerHandler>() {
             @Override

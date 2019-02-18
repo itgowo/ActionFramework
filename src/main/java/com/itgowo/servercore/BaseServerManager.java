@@ -1,6 +1,6 @@
 package com.itgowo.servercore;
 
-import com.itgowo.servercore.utils.LogU;
+import com.itgowo.actionframework.ServerManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -10,8 +10,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.Logger;
 
 public abstract class BaseServerManager {
     protected EventLoopGroup bossGroup;
@@ -21,28 +20,19 @@ public abstract class BaseServerManager {
     protected boolean isRunning = false;
     protected int serverPort = 0;
     protected String serverName = this.getClass().getSimpleName();
-    protected Logger log;
 
-    public Logger getLogger() {
-        if (log == null) {
-            synchronized (BaseServerManager.class) {
-                log = LogU.getLogU(serverName, Level.ALL);
-            }
-        }
-        return log;
+    public BaseServerManager(String serverName) {
+        this.serverName = serverName;
     }
-
+    public Logger getLogger(){
+        return ServerManager.getLogger();
+    }
     public boolean isRunning() {
         return isRunning;
     }
 
     public onServerListener getOnServerListener() {
         return onServerListener;
-    }
-
-    public BaseServerManager setServerName(String serverName) {
-        this.serverName = serverName;
-        return this;
     }
 
     /**
@@ -82,7 +72,7 @@ public abstract class BaseServerManager {
             throw new Exception("请先设置线程池");
         }
         try {
-            getLogger().info("The " + serverName + " is Starting....");
+            ServerManager.getLogger().info("The " + serverName + " is Starting....");
             serverBootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
@@ -105,7 +95,7 @@ public abstract class BaseServerManager {
             if (onServerListener != null) {
                 onServerListener.onServerStarted(serverPort);
             }
-            getLogger().info("The " + serverName + " is Started....");
+            ServerManager.getLogger().info("The " + serverName + " is Started....");
             isRunning = true;
             if (onServerListener != null) {
                 onServerListener.onServerStarted(serverPort);
@@ -114,7 +104,7 @@ public abstract class BaseServerManager {
             if (onServerListener != null) {
                 onServerListener.onServerStop();
             }
-            getLogger().info("The " + serverName + " is Stopped");
+            ServerManager.getLogger().info("The " + serverName + " is Stopped");
         } catch (Exception e) {
             isRunning = false;
             e.printStackTrace();
@@ -133,7 +123,7 @@ public abstract class BaseServerManager {
 
     public void stop() {
         isRunning = false;
-        getLogger().info("The " + serverName + " is Stopping");
+        ServerManager.getLogger().info("The " + serverName + " is Stopping");
         if (workerGroup != null) workerGroup.shutdownGracefully();
         if (bossGroup != null) bossGroup.shutdownGracefully();
     }

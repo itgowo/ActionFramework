@@ -5,6 +5,11 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.socket.SocketChannel;
 
 public class PackageServerManager extends BaseServerManager {
+
+    public PackageServerManager(String serverName) {
+        super(serverName);
+    }
+
     @Override
     protected void prepareServerConfig(ServerBootstrap serverBootstrap, SocketChannel ch) throws Exception {
         ch.pipeline().addLast(PackageMessageDecoder.class.getSimpleName(),new PackageMessageDecoder());

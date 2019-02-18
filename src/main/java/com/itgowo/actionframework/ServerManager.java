@@ -7,8 +7,8 @@ import com.itgowo.servercore.http.HttpServerManager;
 import com.itgowo.servercore.utils.LogU;
 
 import java.util.concurrent.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 /**
  * 只针对http服务器提供管理，websocket和socket服务自行控制。
@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 public class ServerManager {
     private static ExecutorService executorService = new ThreadPoolExecutor(1, 200, 1, TimeUnit.MINUTES, new LinkedBlockingDeque<>());
     private static ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(0);
-    private static HttpServerManager httpServerManager = new HttpServerManager("");
-    private static onJsonConvertListener onJsonConvertListener ;
+    private static HttpServerManager httpServerManager = new HttpServerManager("", "AutoHttpServer");
+    private static onJsonConvertListener onJsonConvertListener;
     private static Logger log;
     private static HttpServerInitCallback httpServerInitCallback = null;
     private static onErrorListener onErrorListener = null;
@@ -35,13 +35,25 @@ public class ServerManager {
         ServerManager.log = log;
     }
 
+    public static void setLogger(String name) {
+        synchronized (ServerManager.class) {
+            log = LogU.getLogU(name, Level.ALL);
+        }
+    }
+
     public static Logger getLogger() {
         if (log == null) {
             synchronized (ServerManager.class) {
-                log = LogU.getLogU("com.itgowo.server.BaseServerManager", Level.ALL);
+                log = LogU.getLogU("ServerManager", Level.ALL);
             }
         }
         return log;
+    }
+
+    public static Logger getLogger(String name) {
+        synchronized (ServerManager.class) {
+            return LogU.getLogU(name, Level.ALL);
+        }
     }
 
     public static ExecutorService getExecutorService() {

@@ -96,12 +96,12 @@ public class Utils {
         return myClassName;
     }
 
-    public static List<ClassEntry> getClassByDir(File rootDir, String packageName) {
+    public static List<ClassEntry> getClassByDir(File rootDir, String pathFilter, String packageName) {
         List<ClassEntry> classes = new ArrayList<>();
         if (rootDir == null || !rootDir.exists()) {
             return classes;
         }
-        List<File> files = getAllFileFromDir(rootDir, "class");
+        List<File> files = getAllFileFromDir(rootDir, pathFilter, "class");
         ServerClassLoader serverClassLoader = new ServerClassLoader(packageName);
         for (File file : files) {
             try {
@@ -135,7 +135,7 @@ public class Utils {
      * @param extName
      * @return
      */
-    public static List<File> getAllFileFromDir(File rootDir, String extName) {
+    public static List<File> getAllFileFromDir(File rootDir, String pathFilter, String extName) {
         List<File> files = new ArrayList<>();
         if (rootDir.isFile()) {
             if (extName != null && rootDir.getAbsolutePath().endsWith(extName)) {
@@ -147,9 +147,9 @@ public class Utils {
             File[] fs = rootDir.listFiles();
             for (File f : fs) {
                 if (f.isDirectory())    //若是目录，则递归打印该目录下的文件
-                    files.addAll(getAllFileFromDir(f, extName));
+                    files.addAll(getAllFileFromDir(f, pathFilter, extName));
                 if (f.isFile())//若是文件，直接打印
-                    if (extName != null && f.getAbsolutePath().endsWith(extName)) {
+                    if ((extName != null && f.getAbsolutePath().endsWith(extName)) && (pathFilter != null && f.getAbsolutePath().startsWith(pathFilter))) {
                         files.add(f);
                     } else if (extName == null) {
                         files.add(f);

@@ -93,12 +93,12 @@ public class MybatisManager {
             List<File> files = new ArrayList<>();
             File df = new File(BaseConfig.getConfigServerMybatisMapperDynamicPath());
             if (df != null && df.exists() && df.isDirectory()) {
-                files.addAll(Utils.getAllFileFromDir(df, ".xml"));
+                files.addAll(Utils.getAllFileFromDir(df, BaseConfig.getConfigServerMybatisMapperPath(), ".xml"));
             }
             boolean isJar = false;
             if (file.isDirectory()) {
                 file = file.getParentFile();
-                files.addAll(Utils.getAllFileFromDir(file, ".xml"));
+                files.addAll(Utils.getAllFileFromDir(file, BaseConfig.getConfigServerMybatisMapperPath(), ".xml"));
             } else {
                 isJar = true;
                 JarFile jarFile = new JarFile(file);
