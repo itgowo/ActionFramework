@@ -31,9 +31,11 @@ public class MybatisManager {
     private static SqlSessionFactoryBuilder mSqlSessionFactoryBuilder;
     private static AtomicBoolean isReload = new AtomicBoolean(false);
     private static Lock lock = new ReentrantLock();
+
     static {
         getSqlSessionFactory();
     }
+
     public static SqlSessionFactory getSqlSessionFactory() {
         if (mSqlSessionFactoryBuilder == null) {
             mSqlSessionFactoryBuilder = new SqlSessionFactoryBuilder();
@@ -77,7 +79,17 @@ public class MybatisManager {
      */
     private static void loadMapper() {
         try {
-            File file = new File(MybatisManager.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+
+            Class c = null;
+            try {
+                c = Class.forName(BaseConfig.getServerMainClass());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            if (c == null) {
+                c = MybatisManager.class;
+            }
+            File file = new File(c.getProtectionDomain().getCodeSource().getLocation().getFile());
             List<File> files = new ArrayList<>();
             File df = new File(BaseConfig.getConfigServerMybatisMapperDynamicPath());
             if (df != null && df.exists() && df.isDirectory()) {
