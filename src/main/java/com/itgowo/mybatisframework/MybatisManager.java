@@ -127,7 +127,7 @@ public class MybatisManager {
                     } else {
                         inputStream = new FileInputStream(files.get(i));
                     }
-                    XMLMapperBuilder builder = new XMLMapperBuilder(inputStream, mSqlSessionFactory.getConfiguration(), "", mSqlSessionFactory.getConfiguration().getSqlFragments());
+                    XMLMapperBuilder builder = new XMLMapperBuilder(inputStream, mSqlSessionFactory.getConfiguration(), files.get(i).toString(), mSqlSessionFactory.getConfiguration().getSqlFragments());
                     builder.parse();
                     ServerManager.getLogger().info("Mapper添加成功：" + files.get(i));
                 } catch (Exception e) {
