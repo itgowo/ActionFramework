@@ -144,7 +144,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
                 return;
             }
         } catch (SecurityException e) {
-            httpServerManager.getLogger().warn(e);
+            httpServerManager.getLogger().warn(e, e);
             return;
         }
 
@@ -152,7 +152,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
         try {
             o = c.newInstance();
         } catch (Exception e) {
-            httpServerManager.getLogger().warn(e);
+            httpServerManager.getLogger().warn(e, e);
             return;
         }
         try {
@@ -173,7 +173,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
                 }
             }
         } catch (Exception e) {
-            httpServerManager.getLogger().warn(e);
+            httpServerManager.getLogger().warn(e, e);
         }
     }
 
@@ -328,7 +328,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
 
     @Override
     public void onError(Throwable throwable) {
-        httpServerManager.getLogger().error(throwable);
+        httpServerManager.getLogger().error(throwable, throwable);
         if (dispatcherListener != null) dispatcherListener.onDispatcherError(throwable);
     }
 
@@ -374,7 +374,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
                 try {
                     handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求被拦截"), true);
                 } catch (UnsupportedEncodingException e) {
-                    httpServerManager.getLogger().warn(e);
+                    httpServerManager.getLogger().warn(e, e);
                 }
                 return;
             }
@@ -416,11 +416,11 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
                 }
                 actionRequest.doAction(handler, baseRequest);
             } catch (Exception e) {
-                httpServerManager.getLogger().error(e);
+                httpServerManager.getLogger().error(e, e);
                 try {
                     handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求无法处理，数据解析错误"), true);
                 } catch (UnsupportedEncodingException f) {
-                    httpServerManager.getLogger().error(f);
+                    httpServerManager.getLogger().error(f, f);
                     if (dispatcherListener != null) {
                         dispatcherListener.onDispatcherError(f);
                     }
@@ -431,7 +431,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
             try {
                 handler.sendData(new ServerJsonEntity().setCode(ServerJsonEntity.Fail).setMsg("请求无法处理，数据错误"), true);
             } catch (UnsupportedEncodingException e) {
-                httpServerManager.getLogger().error(e);
+                httpServerManager.getLogger().error(e, e);
                 if (dispatcherListener != null) {
                     dispatcherListener.onDispatcherError(e);
                 }

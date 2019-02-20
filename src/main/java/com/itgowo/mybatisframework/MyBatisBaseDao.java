@@ -1,6 +1,7 @@
 package com.itgowo.mybatisframework;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * DAO公共基类，由MybatisGenerator自动生成请勿修改
@@ -15,11 +16,9 @@ public interface MyBatisBaseDao<Model, PK extends Serializable> {
 
     int insertSelective(Model record);
 
-    int selectSelective(Model record);
+    List<Model> selectSelective(Model record);
 
     int deleteSelective(Model record);
-
-    int updateSelective(Model record);
 
     Model selectByPrimaryKey(PK id);
 
@@ -28,6 +27,8 @@ public interface MyBatisBaseDao<Model, PK extends Serializable> {
     int deleteByUUID(String uuid);
 
     int updateByPrimaryKeySelective(Model record);
+
+    int updateByUUIDSelective(Model record);
 
     int updateByPrimaryKeyWithBLOBs(Model record);
 

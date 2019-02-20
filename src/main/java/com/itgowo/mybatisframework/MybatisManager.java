@@ -131,7 +131,7 @@ public class MybatisManager {
                     builder.parse();
                     ServerManager.getLogger().info("Mapper添加成功：" + files.get(i));
                 } catch (Exception e) {
-                    ServerManager.getLogger().error(e);
+                    ServerManager.getLogger().error(e,e);
                     ServerManager.getLogger().info("Mapper解析失败：" + files.get(i));
                 }
             }
