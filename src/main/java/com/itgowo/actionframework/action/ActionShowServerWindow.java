@@ -9,7 +9,7 @@ import com.itgowo.servercore.http.HttpServerHandler;
 
 import java.util.List;
 
-public class ActionShowServerWindow extends ActionRequest {
+public class ActionShowServerWindow extends ActionRequest<BaseRequest> {
     public static final String ACTION = "ShowServerWindow";
     public static final String METHOD = "POST";
 

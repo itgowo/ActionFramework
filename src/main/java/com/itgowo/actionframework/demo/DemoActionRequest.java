@@ -6,10 +6,10 @@ import com.itgowo.actionframework.base.BaseRequest;
 
 import java.util.List;
 
-public class DemoActionRequest extends ActionRequest {
+public class DemoActionRequest extends ActionRequest<DemoClientRequest> {
 
     @Override
-    public void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception {
+    public void doAction(HttpServerHandler handler, DemoClientRequest baseRequest) throws Exception {
         handler.sendData("helloword!this is demo interface",false);
     }
 

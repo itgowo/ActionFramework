@@ -10,7 +10,7 @@ import com.itgowo.servercore.onServerListener;
 
 import java.util.List;
 
-public class ActionServerReloadAction extends ActionRequest {
+public class ActionServerReloadAction extends ActionRequest<BaseRequest> {
     public static final String ACTION = "ReloadAction";
     public static final String METHOD = "POST";
 

@@ -9,7 +9,7 @@ import com.itgowo.servercore.http.HttpServerHandler;
 
 import java.util.List;
 
-public class ActionServerReloadMybatisMapperTest extends ActionRequest {
+public class ActionServerReloadMybatisMapperTest extends ActionRequest<BaseRequest> {
     public static final String ACTION = "ReloadMapperTest";
     public static final String METHOD = "POST";
 

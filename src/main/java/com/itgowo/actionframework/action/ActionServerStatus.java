@@ -9,7 +9,7 @@ import com.itgowo.actionframework.utils.SystemInfo;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActionServerStatus extends ActionRequest {
+public class ActionServerStatus extends ActionRequest<BaseRequest> {
     @Override
     public void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception {
         ServerJsonEntity entity = new ServerJsonEntity();

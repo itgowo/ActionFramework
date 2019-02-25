@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 事件分发处理，将实现该接口的类添加到处理器中就会被自动事件调用
  */
-public abstract class ActionRequest {
+public abstract class ActionRequest<T extends BaseRequest> {
     //public static final String ACTION = "getHeroDetailList";
     //public static final String METHOD = "POST";
     public List<Filter> filterList = new ArrayList<>();
@@ -21,10 +21,10 @@ public abstract class ActionRequest {
      * 只处理POST请求，只有匹配对应action才会触发
      *
      * @param handler
-     * @param baseRequest
+     * @param request
      * @throws Exception
      */
-    public abstract void doAction(HttpServerHandler handler, BaseRequest baseRequest) throws Exception;
+    public abstract void doAction(HttpServerHandler handler, T request) throws Exception;
 
     public abstract void getFilter(List<Filter> filterList);
 
