@@ -5,7 +5,6 @@ import com.itgowo.actionframework.ServerManager;
 import com.itgowo.actionframework.utils.Utils;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
-import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.logging.log4j2.Log4j2Impl;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -97,15 +96,21 @@ public class MybatisManager {
                 c = MybatisManager.class;
             }
             File file = new File(c.getProtectionDomain().getCodeSource().getLocation().getFile());
-            List<File> files = new ArrayList<>();
+            List<MapperFile> files = new ArrayList<>();
             File df = new File(BaseConfig.getConfigServerMybatisMapperDynamicPath());
             if (df != null && df.exists() && df.isDirectory()) {
-                files.addAll(Utils.getAllFileFromDir(df, BaseConfig.getConfigServerMybatisMapperPath(), ".xml"));
+                List<File> files1 = Utils.getAllFileFromDir(df, BaseConfig.getConfigServerMybatisMapperPath(), ".xml");
+                for (int i = 0; i < files1.size(); i++) {
+                    files.add(new MapperFile(files1.get(i), new FileInputStream(files1.get(i))));
+                }
             }
             boolean isJar = false;
             if (file.isDirectory()) {
                 file = file.getParentFile();
-                files.addAll(Utils.getAllFileFromDir(file, BaseConfig.getConfigServerMybatisMapperPath(), ".xml"));
+                List<File> files1 = Utils.getAllFileFromDir(file, BaseConfig.getConfigServerMybatisMapperPath(), ".xml");
+                for (int i = 0; i < files1.size(); i++) {
+                    files.add(new MapperFile(files1.get(i), new FileInputStream(files1.get(i))));
+                }
             } else {
                 isJar = true;
                 JarFile jarFile = new JarFile(file);
@@ -114,25 +119,19 @@ public class MybatisManager {
                 while (entryEnumeration.hasMoreElements()) {
                     JarEntry entry = entryEnumeration.nextElement();
                     if (entry.getName().endsWith(".xml") && !entry.getName().startsWith("META-INF") && (per == null ? true : entry.getName().startsWith(per))) {
-                        files.add(new File(entry.getName()));
+                        files.add(new MapperFile(new File(jarFile.getName()), jarFile.getInputStream(entry)));
                     }
                 }
             }
 
             for (int i = 0; i < files.size(); i++) {
                 try {
-                    InputStream inputStream = null;
-                    if (isJar) {
-                        inputStream = Resources.getResourceAsStream(files.get(i).toString());
-                    } else {
-                        inputStream = new FileInputStream(files.get(i));
-                    }
-                    XMLMapperBuilder builder = new XMLMapperBuilder(inputStream, mSqlSessionFactory.getConfiguration(), files.get(i).toString(), mSqlSessionFactory.getConfiguration().getSqlFragments());
+                    XMLMapperBuilder builder = new XMLMapperBuilder(files.get(i).getInputStream(), mSqlSessionFactory.getConfiguration(), files.get(i).getFile().toString(), mSqlSessionFactory.getConfiguration().getSqlFragments());
                     builder.parse();
-                    ServerManager.getLogger().info("Mapper添加成功：" + files.get(i));
+                    ServerManager.getLogger().info("Mapper添加成功：" + files.get(i).getFile());
                 } catch (Exception e) {
-                    ServerManager.getLogger().error(e,e);
-                    ServerManager.getLogger().info("Mapper解析失败：" + files.get(i));
+                    ServerManager.getLogger().error(e, e);
+                    ServerManager.getLogger().info("Mapper解析失败：" + files.get(i).getFile());
                 }
             }
             ServerManager.getLogger().info("加载Mapper完成");
@@ -172,6 +171,24 @@ public class MybatisManager {
         field.setAccessible(true);
         Set setConfig = (Set) field.get(configuration);
         setConfig.clear();
+    }
+
+    private static class MapperFile {
+        private File file;
+        private InputStream inputStream;
+
+        public MapperFile(File file, InputStream inputStream) {
+            this.file = file;
+            this.inputStream = inputStream;
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+        public InputStream getInputStream() {
+            return inputStream;
+        }
     }
 
     public static class DataSourceFactory {
