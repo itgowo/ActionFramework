@@ -15,7 +15,7 @@ import io.netty.handler.stream.ChunkedWriteHandler;
  * Created by lujianchao on 2017/5/25.
  */
 public class HttpServerManager extends BaseServerManager {
-    private String webRootDir;
+    private String webRootDir="web";
 
     public HttpServerManager(String webRootDir,String servername) {
         super(servername);

@@ -384,7 +384,7 @@ public class Dispatcher implements onServerListener<HttpServerHandler> {
             }
             String action = null;
             BaseRequest baseRequest = null;
-            if (handler.getHttpRequest().method().equals(HttpMethod.POST)) {
+            if (handler.getHttpRequest().method().equals(HttpMethod.POST) && !handler.isMultipart()) {
                 try {
                     String body = handler.getBody(null);
                     baseRequest = ServerManager.getOnJsonConvertListener().parseJson(body);
