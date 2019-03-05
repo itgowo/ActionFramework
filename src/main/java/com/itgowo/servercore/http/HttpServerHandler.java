@@ -30,6 +30,7 @@ public class HttpServerHandler implements ServerHandler {
     private FullHttpRequest httpRequest;
     private ByteBuf body = Unpooled.buffer();
     private QueryStringDecoder decoderQuery;
+    private boolean isMultipart;
 
     private Map<String, String> parameters = new HashMap<>();
     private HttpHeaders responseHeader = new DefaultHttpHeaders();
@@ -46,6 +47,7 @@ public class HttpServerHandler implements ServerHandler {
         this.httpRequest = httpRequest;
         decoder = new HttpPostRequestDecoder(factory, httpRequest);
         if (decoder.isMultipart()) {
+            isMultipart = true;
             try {
                 decoder.offer(httpRequest);
                 for (InterfaceHttpData httpData : decoder.getBodyHttpDatas()) {
@@ -276,6 +278,6 @@ public class HttpServerHandler implements ServerHandler {
     }
 
     public boolean isMultipart() {
-        return decoder.isMultipart();
+        return isMultipart;
     }
 }

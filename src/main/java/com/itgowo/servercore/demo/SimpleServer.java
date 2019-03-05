@@ -34,7 +34,6 @@ public class SimpleServer {
 
             @Override
             public void onReceiveHandler(HttpServerHandler handler) throws Exception {
-//                System.out.println(handler);
 //                handler.sendRedirect("http://baidu.com");
                 String path = handler.getPath();
                 if (handler.getHttpRequest().method() == HttpMethod.OPTIONS) {
@@ -66,7 +65,7 @@ public class SimpleServer {
 
             @Override
             public void onServerStarted(int serverPort) {
-
+                System.out.println(serverPort);
             }
 
             @Override
