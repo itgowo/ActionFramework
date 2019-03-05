@@ -119,7 +119,7 @@ public class MybatisManager {
                 while (entryEnumeration.hasMoreElements()) {
                     JarEntry entry = entryEnumeration.nextElement();
                     if (entry.getName().endsWith(".xml") && !entry.getName().startsWith("META-INF") && (per == null ? true : entry.getName().startsWith(per))) {
-                        files.add(new MapperFile(new File(jarFile.getName()), jarFile.getInputStream(entry)));
+                        files.add(new MapperFile(new File(entry.getName()), jarFile.getInputStream(entry)));
                     }
                 }
             }

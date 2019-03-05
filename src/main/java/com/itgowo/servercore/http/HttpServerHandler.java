@@ -31,6 +31,7 @@ public class HttpServerHandler implements ServerHandler {
     private ByteBuf body = Unpooled.buffer();
     private QueryStringDecoder decoderQuery;
     private boolean isMultipart;
+    private String webRootDir;
 
     private Map<String, String> parameters = new HashMap<>();
     private HttpHeaders responseHeader = new DefaultHttpHeaders();
@@ -41,9 +42,13 @@ public class HttpServerHandler implements ServerHandler {
         responseHeader.add(key, value);
     }
 
+    public String getWebRootDir() {
+        return webRootDir;
+    }
 
     public HttpServerHandler(ChannelHandlerContext ctx, FullHttpRequest httpRequest, HttpDataFactory factory, String webRootDir) {
         this.ctx = ctx;
+        this.webRootDir = webRootDir;
         this.httpRequest = httpRequest;
         decoder = new HttpPostRequestDecoder(factory, httpRequest);
         if (decoder.isMultipart()) {
