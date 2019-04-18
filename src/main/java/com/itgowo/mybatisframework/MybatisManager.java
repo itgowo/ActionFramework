@@ -198,6 +198,9 @@ public class MybatisManager {
             String username = BaseConfig.getServerMySQLUser();
             String password = BaseConfig.getServerMySQLPassword();
             PooledDataSource dataSource = new PooledDataSource(driver, url, username, password);
+            dataSource.setPoolPingEnabled(true);
+            dataSource.setPoolPingConnectionsNotUsedFor(1000*3600);
+            dataSource.setPoolPingQuery("SHOW DATABASES");
             return dataSource;
         }
     }
